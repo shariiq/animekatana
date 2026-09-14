@@ -10,35 +10,35 @@ const { anime, rank } = Astro.props;
 const displayTitle = anime.title.english || anime.title.romaji || anime.title.native || 'Untitled';
 ---
 
-<article class="group relative overflow-hidden rounded-lg border border-parchment-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-  <a href={`/anime/${anime.id}/${anime.slug}`} class="block focus:outline-none focus:ring-2 focus:ring-inset focus:ring-evergreen-500">
-    <div class="relative aspect-[3/4] overflow-hidden bg-parchment-100">
+<article class="anime-card group">
+  <a href={`/anime/${anime.id}/${anime.slug}`} class="block focus:outline-none">
+    <div class="anime-card-image">
       <img
         src={anime.coverImage.extraLarge || anime.coverImage.large}
         alt={`Cover art for ${displayTitle}`}
         loading="lazy"
         decoding="async"
-        class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+        class="anime-card-img"
       />
       {rank && (
         <div class="absolute left-3 top-3 flex h-8 min-w-8 items-center justify-center rounded-full bg-evergreen-900 px-2 text-sm font-bold text-white shadow-md">
           {rank}
         </div>
       )}
-      <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 pt-12">
+      <div class="anime-card-overlay">
         <div class="flex items-center gap-2 text-xs font-medium text-white/90">
-          {anime.score && <span>{anime.score}% Match</span>}
-          {anime.format && <><span>•</span><span>{anime.format}</span></>}
+          {anime.score && <span class="bg-black/40 px-1.5 py-0.5 rounded">{anime.score}% Match</span>}
+          {anime.format && <><span class="bg-black/40 px-1.5 py-0.5 rounded">{anime.format}</span></>}
         </div>
       </div>
     </div>
-    <div class="p-4">
-      <h3 class="line-clamp-2 min-h-[2.75rem] font-serif text-lg font-bold leading-snug text-gray-900 group-hover:text-evergreen-800">
+    <div class="anime-card-body">
+      <h3 class="anime-card-title line-clamp-2 min-h-[2.75rem]">
         {displayTitle}
       </h3>
-      <div class="mt-2 flex flex-wrap gap-1.5">
+      <div class="anime-card-meta">
         {anime.genres.slice(0, 2).map((genre) => (
-          <span class="rounded-full bg-parchment-100 px-2 py-0.5 text-xs font-medium text-gray-600">{genre}</span>
+          <span class="rounded-full bg-parchment-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">{genre}</span>
         ))}
       </div>
     </div>

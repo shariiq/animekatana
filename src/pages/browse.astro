@@ -1,16 +1,25 @@
 ---
-import Layout from '../layouts/Layout.astro';
 import AnimeSection from '../components/content/AnimeSection.astro';
+import Layout from '../layouts/Layout.astro';
 import { getCatalogue } from '../lib/anilist/client';
 
 const { searchParams } = Astro.url;
-const page = parseInt(searchParams.get('page') ?? '1');
+const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
 const genre = searchParams.get('genre') || null;
 const format = searchParams.get('format') || null;
 const status = searchParams.get('status') || null;
 const season = searchParams.get('season') || null;
-const year = searchParams.get('year') ? parseInt(searchParams.get('year')!) : null;
+const year = searchParams.get('year') ? parseInt(searchParams.get('year')!, 10) : null;
 const sort = searchParams.get('sort')?.split(',') || ['POPULARITY_DESC'];
+
+const browseHref = (changes: Record<string, string | number | null>) => {
+  const params = new URLSearchParams(searchParams);
+  for (const [key, value] of Object.entries(changes)) {
+    if (value === null || value === '') params.delete(key);
+    else params.set(key, String(value));
+  }
+  return `/browse${params.size ? `?${params}` : ''}`;
+};
 
 let data: Awaited<ReturnType<typeof getCatalogue>> | null = null;
 let error: string | null = null;
@@ -21,69 +30,52 @@ try {
 }
 
 const activeFilters = [
-  { label: 'Genre', value: genre, href: genre ? `/browse?format=${format || ''}&status=${status || ''}&season=${season || ''}&year=${year || ''}&sort=${sort.join(',')}` : null },
-  { label: 'Format', value: format, href: format ? `/browse?genre=${genre || ''}&status=${status || ''}&season=${season || ''}&year=${year || ''}&sort=${sort.join(',')}` : null },
-  { label: 'Status', value: status, href: status ? `/browse?genre=${genre || ''}&format=${format || ''}&season=${season || ''}&year=${year || ''}&sort=${sort.join(',')}` : null },
-].filter(f => f.value);
+  { label: 'Genre', value: genre, href: browseHref({ genre: null, page: 1 }) },
+  { label: 'Format', value: format, href: browseHref({ format: null, page: 1 }) },
+  { label: 'Status', value: status, href: browseHref({ status: null, page: 1 }) },
+].filter((filter) => filter.value);
 ---
 
 <Layout title="Browse Anime — AnimeKatana">
-  <section class="border-b border-parchment-200 bg-parchment-100 py-12 sm:py-16">
+  <section class="page-hero">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <h1 class="font-serif text-4xl font-bold text-evergreen-950 sm:text-5xl">Catalogue</h1>
-      <p class="mt-4 max-w-2xl text-lg text-gray-700">Refine your search through our exhaustive library of anime, from seasonal hits to forgotten classics.</p>
-
-      <div class="mt-8 flex flex-wrap gap-3">
-        {activeFilters.map(filter => (
-          <a href={filter.href} class="inline-flex items-center gap-2 rounded-full bg-evergreen-100 px-3 py-1 text-xs font-bold text-evergreen-800 hover:bg-evergreen-200">
-            {filter.label}: {filter.value}
-            <span class="ml-1 text-evergreen-400">×</span>
-          </a>
-        ))}
-      </div>
+      <p class="eyebrow">The complete catalogue</p>
+      <h1 class="page-hero-title mt-2">Find something remarkable</h1>
+      <p class="page-hero-description">Move through seasons, formats, and genres without losing the thread of what makes each story worth your time.</p>
+      {activeFilters.length > 0 && <div class="mt-7 flex flex-wrap gap-2" aria-label="Active filters">
+        {activeFilters.map((filter) => <a href={filter.href} class="filter-chip">{filter.label}: {filter.value}<span aria-hidden="true" class="text-evergreen-500">×</span></a>)}
+      </div>}
     </div>
   </section>
 
-  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-    <div class="grid gap-12 lg:grid-cols-[280px_1fr]">
-      <aside class="space-y-8">
+  <div class="page-shell">
+    <div class="grid gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-12">
+      <aside class="surface-raised h-fit p-5 lg:sticky lg:top-24" aria-label="Catalogue filters">
         <div>
-          <h3 class="mb-4 font-semibold text-gray-900">Format</h3>
-          <ul class="space-y-2 text-sm text-gray-600">
-            {['TV', 'MOVIE', 'OVA', 'ONA', 'SPECIAL'].map(f => (
-              <li>
-                <a href={`?format=${f}&status=${status || ''}&genre=${genre || ''}`} class={`block py-1 ${format === f ? 'font-bold text-evergreen-800' : 'hover:text-evergreen-700'}`}>{f}</a>
-              </li>
-            ))}
-          </ul>
-        </div >
-        <div>
-          <h3 class="mb-4 font-semibold text-gray-900">Status</h3>
-          <ul class="space-y-2 text-sm text-gray-600">
-            {['FINISHED', 'RELEASING', 'NOT_YET_RELEASED'].map(s => (
-              <li>
-                <a href={`?status=${s}&format=${format || ''}&genre=${genre || ''}`} class={`block py-1 ${status === s ? 'font-bold text-evergreen-800' : 'hover:text-evergreen-700'}`}>{s}</a>
-              </li>
-            ))}
-          </ul>
-        </div >
+          <h2 class="heading-4">Format</h2>
+          <div class="mt-3 space-y-1">
+            {['TV', 'MOVIE', 'OVA', 'ONA', 'SPECIAL'].map((value) => <a href={browseHref({ format: value, page: 1 })} class:list={['filter-option', format === value && 'filter-option-active']}>{value}</a>)}
+          </div>
+        </div>
+        <div class="mt-7 border-t border-parchment-200 pt-6">
+          <h2 class="heading-4">Status</h2>
+          <div class="mt-3 space-y-1">
+            {['FINISHED', 'RELEASING', 'NOT_YET_RELEASED'].map((value) => <a href={browseHref({ status: value, page: 1 })} class:list={['filter-option', status === value && 'filter-option-active']}>{value.replaceAll('_', ' ')}</a>)}
+          </div>
+        </div>
+        {(format || status || genre) && <a href="/browse" class="section-link mt-7">Clear all filters <span aria-hidden="true">×</span></a>}
       </aside>
 
-      <main>
-        {error ? (
-          <div class="rounded-lg border border-terracotta-200 bg-terracotta-50 p-6 text-terracotta-800">{error}</div>
-        ) : data && data.items.length > 0 ? (
-          <AnimeSection title="Results" anime={data.items} />
-        ) : (
-          <div class="py-24 text-center text-gray-600">No anime match these filters.</div>
-        )}
+      <main class="min-w-0">
+        {error ? <div class="state-error" role="alert"><h2 class="heading-4 text-terracotta-900">The catalogue needs a moment.</h2><p class="mt-2">{error}</p></div>
+          : data && data.items.length > 0 ? <AnimeSection title="Results" eyebrow={`${data.items.length} titles on this page`} anime={data.items} />
+          : <div class="state-empty"><h2 class="heading-3">Nothing fits those filters yet.</h2><p class="body-sm mt-2">Remove a filter or begin again with the complete catalogue.</p><a href="/browse" class="btn-primary mt-6">Reset filters</a></div>}
 
-        {data?.hasNext && (
-          <div class="mt-12 flex justify-center gap-4">
-            <a href={`?page=${page - 1}&genre=${genre || ''}&format=${format || ''}&status=${status || ''}`} class={`rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium ${page === 1 ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'}`}>Previous</a>
-            <a href={`?page=${page + 1}&genre=${genre || ''}&format=${format || ''}&status=${status || ''}`} class="rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium hover:bg-gray-50">Next Page</a>
-          </div>
-        )}
+        {data && (page > 1 || data.hasNext) && <nav class="pagination" aria-label="Catalogue pages">
+          <a href={browseHref({ page: page - 1 })} class:list={['pagination-link', page === 1 && 'pagination-link-disabled']} aria-disabled={page === 1 ? 'true' : undefined}>Previous</a>
+          <span class="px-2 text-sm font-semibold text-gray-600">Page {page}</span>
+          <a href={browseHref({ page: page + 1 })} class:list={['pagination-link', !data.hasNext && 'pagination-link-disabled']} aria-disabled={!data.hasNext ? 'true' : undefined}>Next</a>
+        </nav>}
       </main>
     </div>
   </div>

@@ -3,7 +3,7 @@ import { $, component$, useSignal, useStore, useVisibleTask$ } from '@builder.io
 interface Episode { id: string; number: number; title: string; }
 interface Server { id: string; name: string; type: string; }
 interface Subtitle { url: string; label: string; language: string; }
-interface Stream { url: string; quality: string; is_hls: boolean; subtitles: Subtitle[]; }
+interface Stream { url: string; quality: string; is_hls: boolean; headers: Record<string, string>; subtitles: Subtitle[]; }
 
 type Resolution =
   | { state: 'matched'; sourceId: string; animeId: string; title: string; confidence: number }
@@ -131,11 +131,31 @@ export const WatchPlayer = component$<WatchPlayerProps>(({ animeId, episodeNumbe
     element.addEventListener('timeupdate', savePosition);
 
     if (!stream.is_hls || element.canPlayType('application/vnd.apple.mpegurl')) {
+      // AniSource returns its protected HLS streams through /proxy/hls/{token};
+      // native HLS can consume that URL directly. Direct streams may only work
+      // without restricted headers because browsers cannot attach arbitrary
+      // request headers to a <video> resource.
       element.src = stream.url;
     } else {
       import('hls.js').then(({ default: Hls }) => {
         if (!Hls.isSupported()) { state.error = 'This browser cannot play the selected HLS stream.'; return; }
-        const hls = new Hls();
+        const hls = new Hls({
+          // hls.js can attach the source-provided headers to manifest, key,
+          // and segment requests. This is required by hosts with referer/origin
+          // protection and does not expose a general-purpose server proxy.
+          xhrSetup: (xhr) => {
+            for (const [name, value] of Object.entries(stream.headers ?? {})) {
+              xhr.setRequestHeader(name, value);
+            }
+          },
+        });
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (data.fatal) {
+            state.error = data.type === Hls.ErrorTypes.NETWORK_ERROR
+              ? 'The selected server could not be reached. Try another server.'
+              : 'The selected stream could not be played. Try another server.';
+          }
+        });
         hls.loadSource(stream.url);
         hls.attachMedia(element);
         destroyHls = () => hls.destroy();

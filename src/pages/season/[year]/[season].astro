@@ -1,43 +1,42 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
 import AnimeSection from '../../../components/content/AnimeSection.astro';
+import Layout from '../../../layouts/Layout.astro';
 import { getCatalogue } from '../../../lib/anilist/client';
 import { humanSeason } from '../../../lib/season';
 
 const { year, season } = Astro.params;
-const page = parseInt(Astro.url.searchParams.get('page') ?? '1');
+const page = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10) || 1);
+const seasonName = (season || '').toUpperCase();
 
 let data: Awaited<ReturnType<typeof getCatalogue>> | null = null;
 let error: string | null = null;
 try {
-  data = await getCatalogue({ page, season: season?.toUpperCase() || undefined, year: year ? parseInt(year, 10) : undefined });
+  data = await getCatalogue({ page, season: seasonName || undefined, year: year ? parseInt(year, 10) : undefined });
 } catch (cause) {
   error = cause instanceof Error ? cause.message : 'The seasonal catalogue is unavailable.';
 }
+
+const pageHref = (p: number) => `?page=${p}`;
 ---
 
-<Layout title={`${humanSeason((season || '').toUpperCase())} ${year} Anime — AnimeKatana`}>
-  <section class="border-b border-parchment-200 bg-parchment-100 py-12 sm:py-16">
+<Layout title={`${humanSeason(seasonName)} ${year} Anime — AnimeKatana`}>
+  <section class="page-hero">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <h1 class="font-serif text-4xl font-bold text-evergreen-950 sm:text-5xl">{humanSeason((season || '').toUpperCase())} {year}</h1>
-      <p class="mt-4 max-w-2xl text-lg text-gray-700">The definitive guide to the most impactful series of the season.</p>
+      <p class="eyebrow">{year}</p>
+      <h1 class="page-hero-title mt-2">{humanSeason(seasonName)} {year}</h1>
+      <p class="page-hero-description">The definitive guide to the most impactful series of the season.</p>
     </div>
   </section>
 
-  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-    {error ? (
-      <div class="rounded-lg border border-terracotta-200 bg-terracotta-50 p-6 text-terracotta-800">{error}</div>
-    ) : data && data.items.length > 0 ? (
-      <AnimeSection title="Seasonal Lineup" anime={data.items} />
-    ) : (
-      <div class="py-24 text-center text-gray-600">No anime found for this season.</div>
-    )}
+  <div class="page-shell">
+    {error ? <div class="state-error" role="alert"><h2 class="heading-4 text-terracotta-900">The season could not be loaded.</h2><p class="mt-2">{error}</p></div>
+      : data && data.items.length > 0 ? <AnimeSection title="Seasonal Lineup" eyebrow={`${data.items.length} titles on this page`} anime={data.items} />
+      : <div class="state-empty"><h2 class="heading-3">No titles found for this season.</h2><p class="body-sm mt-2">Try a different season or explore the complete catalogue.</p><a href="/browse" class="btn-primary mt-6">Browse catalogue</a></div>}
 
-    {data?.hasNext && (
-      <div class="mt-12 flex justify-center gap-4">
-        <a href={`?page=${page - 1}`} class={`rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium ${page === 1 ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'}`}>Previous</a>
-        <a href={`?page=${page + 1}`} class="rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium hover:bg-gray-50">Next Page</a>
-      </div>
-    )}
+    {data && (page > 1 || data.hasNext) && <nav class="pagination" aria-label="Season pages">
+      <a href={pageHref(page - 1)} class:list={['pagination-link', page === 1 && 'pagination-link-disabled']} aria-disabled={page === 1 ? 'true' : undefined}>Previous</a>
+      <span class="px-2 text-sm font-semibold text-gray-600">Page {page}</span>
+      <a href={pageHref(page + 1)} class:list={['pagination-link', !data.hasNext && 'pagination-link-disabled']} aria-disabled={!data.hasNext ? 'true' : undefined}>Next</a>
+    </nav>}
   </div>
 </Layout>

@@ -43,19 +43,18 @@ const {
 
     <header class="sticky top-0 z-40 border-b border-parchment-200 bg-parchment-50/95 backdrop-blur-sm">
       <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <a href="/" class="font-serif text-2xl font-bold text-evergreen-900 hover:text-terracotta-700">
+        <a href="/" class="font-serif text-2xl font-bold text-evergreen-900 hover:text-terracotta-700 transition-colors">
           AnimeKatana
         </a>
 
         <nav aria-label="Primary navigation" class="hidden items-center gap-6 md:flex">
-          <a href="/browse" class="text-sm font-medium text-gray-700 hover:text-evergreen-700">Browse</a>
-          <a href="/season" class="text-sm font-medium text-gray-700 hover:text-evergreen-700">Seasonal</a>
-          <a href="/schedule" class="text-sm font-medium text-gray-700 hover:text-evergreen-700">Schedule</a>
-          <a href="/rankings" class="text-sm font-medium text-gray-700 hover:text-evergreen-700">Rankings</a>
+          <a href="/browse" class="nav-link">Browse</a>
+          <a href="/rankings" class="nav-link">Rankings</a>
+          <a href="/about" class="nav-link">About</a>
         </nav>
 
         <div class="flex items-center gap-3">
-          <a href="/search" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:border-evergreen-500 hover:text-evergreen-700 focus:outline-none focus:ring-2 focus:ring-evergreen-500 focus:ring-offset-2">
+          <a href="/search" class="btn-secondary">
             Search
           </a>
         </div>
@@ -69,21 +68,21 @@ const {
     <footer class="mt-20 border-t border-parchment-200 bg-parchment-100">
       <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div class="grid gap-8 md:grid-cols-3">
-          <div>
+          <div class="space-y-3">
             <h2 class="font-serif text-xl font-bold text-evergreen-900">AnimeKatana</h2>
-            <p class="mt-3 text-sm text-gray-600">A crafted anime destination, powered by AniList.</p>
+            <p class="text-sm text-gray-600 leading-relaxed">A crafted anime destination, powered by AniList. We bring a curated editorial lens to the vast world of Japanese animation.</p>
           </div>
           <div>
-            <h3 class="font-semibold text-gray-900">Explore</h3>
-            <ul class="mt-3 space-y-2 text-sm text-gray-600">
-              <li><a href="/browse" class="hover:text-evergreen-700">Browse Anime</a></li>
-              <li><a href="/season" class="hover:text-evergreen-700">Seasonal Anime</a></li>
-              <li><a href="/schedule" class="hover:text-evergreen-700">Airing Schedule</a></li>
+            <h3 class="font-semibold text-gray-900 text-sm uppercase tracking-wider mb-4">Explore</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li><a href="/browse" class="hover:text-evergreen-700 transition-colors">Browse Anime</a></li>
+              <li><a href="/rankings" class="hover:text-evergreen-700 transition-colors">Top Rated</a></li>
+              <li><a href="/about" class="hover:text-evergreen-700 transition-colors">Our Vision</a></li>
             </ul>
           </div>
           <div>
-            <h3 class="font-semibold text-gray-900">About</h3>
-            <p class="mt-3 text-sm text-gray-600">Catalogue data from AniList. Playback provided by AniSource.</p>
+            <h3 class="font-semibold text-gray-900 text-sm uppercase tracking-wider mb-4">About</h3>
+            <p class="text-sm text-gray-600 leading-relaxed">Catalogue data provided by AniList. Playback enabled through AniSource.</p>
           </div>
         </div>
         <div class="mt-10 border-t border-parchment-200 pt-6 text-center text-xs text-gray-500">

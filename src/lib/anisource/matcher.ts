@@ -70,7 +70,7 @@ export async function resolvePlayback(anime: Anime, preferredSource?: string): P
   const firstSorted = first.sort((a, b) => b.confidence - a.confidence);
   const firstBest = firstSorted[0];
   const firstRunnerUp = firstSorted[1];
-  if (firstBest && firstBest.confidence >= 0.94 && (!firstRunnerUp || firstBest.confidence - firstRunnerUp.confidence >= 0.12)) {
+  if (firstBest && firstBest.confidence >= 0.90 && (!firstRunnerUp || firstBest.confidence - firstRunnerUp.confidence >= 0.08)) {
     const match: Resolution = { state: 'matched', ...firstBest };
     results.set(cacheKey, match, 86_400); return match;
   }
@@ -79,7 +79,7 @@ export async function resolvePlayback(anime: Anime, preferredSource?: string): P
   const expanded = await Promise.all([searchSource(anime, preferred.id, fallbackQueries), ...fallbackSources.map(source => searchSource(anime, source.id, fallbackQueries))]);
   const candidates = [...new Map(expanded.flat().map(candidate => [`${candidate.sourceId}:${candidate.animeId}`, candidate])).values()].sort((a, b) => b.confidence - a.confidence);
   const best = candidates[0]; const next = candidates[1];
-  if (best && best.confidence >= 0.87 && (!next || best.confidence - next.confidence >= 0.12)) {
+  if (best && best.confidence >= 0.82 && (!next || best.confidence - next.confidence >= 0.08)) {
     const match: Resolution = { state: 'matched', ...best };
     results.set(cacheKey, match, 86_400); return match;
   }
