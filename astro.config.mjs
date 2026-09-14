@@ -1,12 +1,10 @@
 import { defineConfig } from 'astro/config';
 import qwikdev from '@qwikdev/astro';
-import node from '@astrojs/node';
+import vercel from '@astrojs/vercel';
 import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
   output: 'server',
-  adapter: node({
-    mode: 'standalone',
-  }),
+  adapter: vercel(),
   integrations: [tailwind(), qwikdev()],
 });

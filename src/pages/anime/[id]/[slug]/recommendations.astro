@@ -8,8 +8,7 @@ const animeId = parseInt(id!);
 let data: Awaited<ReturnType<typeof getAnime>> | null = null;
 try {
   data = await getAnime(animeId);
-} catch (cause) {
-  error = cause instanceof Error ? cause.message : 'The anime details could not be loaded.';
+} catch {
 }
 
 if (!data) {
