@@ -1,0 +1,19 @@
+---
+import Layout from '../../../../../layouts/Layout.astro';
+import WatchPlayer from '../../../../../components/islands/WatchPlayer';
+import { getAnime } from '../../../../../lib/anilist/client';
+
+const animeId = Number(Astro.params.id);
+const requestedEpisode = Number(Astro.params.episode);
+const data = Number.isInteger(animeId) && animeId > 0 ? await getAnime(animeId).catch(() => null) : null;
+if (!data) return Astro.redirect('/404');
+const { anime } = data;
+const episodeNumber = Number.isInteger(requestedEpisode) && requestedEpisode > 0 ? requestedEpisode : 1;
+---
+
+<Layout title={`Watch ${anime.title.english || anime.title.romaji} — AnimeKatana`} description={`Watch ${anime.title.english || anime.title.romaji} episode ${episodeNumber}.`} image={anime.coverImage.extraLarge}>
+  <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div class="mb-8"><a href={`/anime/${anime.id}/${anime.slug}`} class="text-sm font-semibold text-evergreen-800 hover:text-terracotta-700">← Back to anime guide</a><h1 class="mt-3 font-serif text-3xl font-bold text-evergreen-950">{anime.title.english || anime.title.romaji}</h1></div>
+    <WatchPlayer client:load animeId={anime.id} episodeNumber={episodeNumber} />
+  </div>
+</Layout>

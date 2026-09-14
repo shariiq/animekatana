@@ -1,0 +1,57 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnimeSection from '../components/content/AnimeSection.astro';
+import { getCatalogue } from '../lib/anilist/client';
+
+const { searchParams } = Astro.url;
+const page = parseInt(searchParams.get('page') ?? '1');
+const type = searchParams.get('type') ?? 'POPULARITY_DESC';
+
+let data: Awaited<ReturnType<typeof getCatalogue>> | null = null;
+let error: string | null = null;
+try {
+  data = await getCatalogue({ page, sort: [type] });
+} catch (cause) {
+  error = cause instanceof Error ? cause.message : 'The rankings could not be loaded.';
+}
+
+const rankingTypes = [
+  { id: 'POPULARITY_DESC', label: 'Most Popular' },
+  { id: 'SCORE_DESC', label: 'Highest Rated' },
+  { id: 'FAVOURITES_DESC', label: 'Most Favourites' },
+];
+---
+
+<Layout title="Rankings — AnimeKatana">
+  <section class="border-b border-parchment-200 bg-parchment-100 py-12 sm:py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <h1 class="font-serif text-4xl font-bold text-evergreen-950 sm:text-5xl">Rankings</h1>
+      <p class="mt-4 max-w-2xl text-lg text-gray-700">Explore the definitive lists of the most beloved and highest-rated anime of all time.</p>
+
+      <div class="mt-8 flex flex-wrap gap-3">
+        {rankingTypes.map(t => (
+          <a href={`?type=${t.id}`} class={`rounded-full px-4 py-2 text-sm font-bold transition ${type === t.id ? 'bg-evergreen-800 text-white' : 'bg-white text-gray-600 border border-parchment-300 hover:bg-parchment-100'}`}>
+            {t.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    {error ? (
+      <div class="rounded-lg border border-terracotta-200 bg-terracotta-50 p-6 text-terracotta-800">{error}</div>
+    ) : data && data.items.length > 0 ? (
+      <AnimeSection title={`Ranked by ${rankingTypes.find(t => t.id === type)?.label || 'Popularity'}`} anime={data.items} ranked />
+    ) : (
+      <div class="py-24 text-center text-gray-600">No anime found for this ranking.</div>
+    )}
+
+    {data?.hasNext && (
+      <div class="mt-12 flex justify-center gap-4">
+        <a href={`?type=${type}&page=${page - 1}`} class={`rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium ${page === 1 ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'}`}>Previous</a>
+        <a href={`?type=${type}&page=${page + 1}`} class="rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium hover:bg-gray-50">Next Page</a>
+      </div>
+    )}
+  </div>
+</Layout>

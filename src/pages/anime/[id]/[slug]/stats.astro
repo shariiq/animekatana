@@ -1,0 +1,67 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import { getAnime } from '../../../../lib/anilist/client';
+
+const { id } = Astro.params;
+const animeId = parseInt(id!);
+
+let data: Awaited<ReturnType<typeof getAnime>> | null = null;
+try {
+  data = await getAnime(animeId);
+} catch (cause) {
+  error = cause instanceof Error ? cause.message : 'The anime details could not be loaded.';
+}
+
+if (!data) {
+  return Astro.redirect('/404');
+}
+
+const { anime, raw } = data;
+---
+
+<Layout title={`${anime.title.english || anime.title.romaji} — Statistics — AnimeKatana`}>
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="space-y-8">
+      <div class="flex items-center justify-between space-x-6">
+        <a href={`/anime/${anime.id}/${anime.slug}`} class="text-sm font-medium text-gray-600 hover:text-evergreen-700">
+          ← Back to Overview
+        </a>
+        <h1 class="font-serif text-3xl font-bold text-evergreen-950">
+          {anime.title.english || anime.title.romaji}
+        </h1>
+      </div>
+
+      <section class="space-y-6">
+        <h2 class="font-serif text-2xl font-bold text-evergreen-900">Statistics</h2>
+        {raw.stats ? (
+          <div class="grid gap-8 md:grid-cols-2">
+            <div class="space-y-4">
+              <h3 class="font-serif text-lg font-bold text-evergreen-900">Score Distribution</h3>
+              {raw.stats.scoreDistribution.map(({ score, amount }: { score: number; amount: number }) => (
+                <div class="flex items-center gap-2 mt-2">
+                  <span class="w-8 text-center text-xs font-mono">{score}</span>
+                  <div class="flex-1 bg-parchment-200 rounded-full h-2.5">
+                    <div class="bg-evergreen-500 h-2.5 rounded-full" style={{ width: `${Math.min(amount, 100)}%` }}></div>
+                  </div>
+                  <span class="text-xs text-gray-600 w-16 text-right">{amount}</span>
+                </div>
+              ))}
+            </div>
+            <div class="space-y-4">
+              <h3 class="font-serif text-lg font-bold text-evergreen-900">Status Distribution</h3>
+              {raw.stats.statusDistribution.map(({ status, amount }: { status: string; amount: number }) => (
+                <div class="flex items-start gap-4 mt-2">
+                  <div class="h-4 w-4 rounded-full" style={{ backgroundColor: status === 'Currently Airing' ? '#10B981' : status === 'Completed' ? '#6B7280' : status === 'Not Yet Aired' ? '#F59E0B' : '#EF4444' }}></div>
+                  <span class="text-sm">{status}</span>
+                  <span class="ml-2 text-xs text-gray-600">{amount}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div class="py-8 text-center text-gray-600">No statistics available.</div>
+        )}
+      </section>
+    </div>
+  </div>
+</Layout>

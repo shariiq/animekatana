@@ -1,0 +1,66 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import { getAnime } from '../../../../lib/anilist/client';
+
+const { id } = Astro.params;
+const animeId = parseInt(id!);
+
+let data: Awaited<ReturnType<typeof getAnime>> | null = null;
+try {
+  data = await getAnime(animeId);
+} catch (cause) {
+  error = cause instanceof Error ? cause.message : 'The anime details could not be loaded.';
+}
+
+if (!data) {
+  return Astro.redirect('/404');
+}
+
+const { anime, raw } = data;
+---
+
+<Layout title={`${anime.title.english || anime.title.romaji} — Trailers — AnimeKatana`}>
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="space-y-8">
+      <div class="flex items-center justify-between space-x-6">
+        <a href={`/anime/${anime.id}/${anime.slug}`} class="text-sm font-medium text-gray-600 hover:text-evergreen-700">
+          ← Back to Overview
+        </a>
+        <h1 class="font-serif text-3xl font-bold text-evergreen-950">
+          {anime.title.english || anime.title.romaji}
+        </h1>
+      </div>
+
+      <section class="space-y-6">
+        <h2 class="font-serif text-2xl font-bold text-evergreen-900">Trailers & Videos</h2>
+        {raw.trailer ? (
+          <div class="relative aspect-w-16 aspect-h-9 overflow-hidden rounded-xl bg-black shadow-2xl">
+            <iframe
+              class="absolute inset-0 w-full h-full"
+              src={`https://www.youtube.com/embed/${raw.trailer.id}`}
+              title="Trailer"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
+        ) : (
+          <div class="py-12 text-center text-gray-600">No trailer available.</div>
+        )}
+
+        {raw.externalLinks && Object.keys(raw.externalLinks).length > 0 && (
+          <div class="mt-8 space-y-4">
+            <h3 class="font-serif text-lg font-bold text-evergreen-900">External Links</h3>
+            <div class="space-y-2">
+              {(Object.entries(raw.externalLinks) as Array<[string, string]>).map(([site, url]) => (
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 text-xs font-medium text-evergreen-800">{site}</div>
+                  <a href={url} target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-evergreen-700 underline">{url}</a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  </div>
+</Layout>

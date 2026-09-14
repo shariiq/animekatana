@@ -1,0 +1,70 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnimeSection from '../components/content/AnimeSection.astro';
+import { getSchedule, date } from '../lib/anilist/client';
+
+const now = new Date();
+const from = Math.floor(now.getTime() / 1000);
+const to = Math.floor((new Date(new Date().setDate(now.getDate() + 7))).getTime() / 1000);
+const page = parseInt(Astro.url.searchParams.get('page') ?? '1');
+
+type ScheduleItem = { airingAt: number; episode: number; media: import('../lib/types').Anime };
+let data: { pageInfo: { hasNextPage: boolean }; items: ScheduleItem[] } | null = null;
+let error: string | null = null;
+try {
+  data = await getSchedule(from, to, page);
+} catch (cause) {
+  error = cause instanceof Error ? cause.message : 'The schedule could not be loaded.';
+}
+---
+
+<Layout title="Airing Schedule — AnimeKatana">
+  <section class="border-b border-parchment-200 bg-parchment-100 py-12 sm:py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <h1 class="font-serif text-4xl font-bold text-evergreen-950 sm:text-5xl">Airing Schedule</h1>
+      <p class="mt-4 max-w-2xl text-lg text-gray-700">Keep track of your favorite series with our comprehensive airing agenda for the next 7 days.</p>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    {error ? (
+      <div class="rounded-lg border border-terracotta-200 bg-terracotta-50 p-6 text-terracotta-800">{error}</div>
+    ) : data && data.items.length > 0 ? (
+      <div class="space-y-12">
+        {/* Group by date */}
+        {Array.from(new Set(data.items.map((i: ScheduleItem) => i.airingAt))).sort((a, b) => a - b).map((airingAt: number) => {
+          const dateStr = new Date(airingAt * 1000).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+          const dailyAnime = data.items.filter((i: ScheduleItem) => i.airingAt === airingAt);
+          return (
+            <div class="space-y-6">
+              <h2 class="font-serif text-2xl font-bold text-evergreen-900 border-b border-parchment-200 pb-2">{dateStr}</h2>
+              <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {dailyAnime.map((item: ScheduleItem) => (
+                  <div class="group relative rounded-lg border border-parchment-200 bg-white p-4 shadow-sm hover:shadow-md transition">
+                    <div class="flex gap-4">
+                      <img src={item.media.coverImage.large} class="h-20 w-12 object-cover rounded" alt="" />
+                      <div>
+                        <p class="text-xs font-bold uppercase text-terracotta-600">{item.episode} Ep</p>
+                        <h4 class="font-serif text-sm font-bold text-gray-900 line-clamp-1">{item.media.title.romaji}</h4>
+                        <a href={`/anime/${item.media.id}/${item.media.slug}`} class="text-xs text-evergreen-700 hover:underline">View details →</a>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      <div class="py-24 text-center text-gray-600">No anime airing in the selected period.</div>
+    )}
+
+    {data?.pageInfo.hasNextPage && (
+      <div class="mt-12 flex justify-center gap-4">
+        <a href={`?page=${page - 1}`} class={`rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium ${page === 1 ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'}`}>Previous</a>
+        <a href={`?page=${page + 1}`} class="rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium hover:bg-gray-50">Next Page</a>
+      </div>
+    )}
+  </div>
+</Layout>

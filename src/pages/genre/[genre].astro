@@ -1,0 +1,42 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AnimeSection from '../../components/content/AnimeSection.astro';
+import { getCatalogue } from '../../lib/anilist/client';
+
+const { genre } = Astro.params;
+const page = parseInt(Astro.url.searchParams.get('page') ?? '1');
+
+let data: Awaited<ReturnType<typeof getCatalogue>> | null = null;
+let error: string | null = null;
+try {
+  data = await getCatalogue({ page, genre });
+} catch (cause) {
+  error = cause instanceof Error ? cause.message : 'The genre catalogue is unavailable.';
+}
+---
+
+<Layout title={`${genre} Anime — AnimeKatana`}>
+  <section class="border-b border-parchment-200 bg-parchment-100 py-12 sm:py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <h1 class="font-serif text-4xl font-bold text-evergreen-950 sm:text-5xl">{genre} Anime</h1>
+      <p class="mt-4 max-w-2xl text-lg text-gray-700">Exploring the best of {genre} anime, from definitive classics to the latest releases.</p>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    {error ? (
+      <div class="rounded-lg border border-terracotta-200 bg-terracotta-50 p-6 text-terracotta-800">{error}</div>
+    ) : data && data.items.length > 0 ? (
+      <AnimeSection title={`${genre} Collection`} anime={data.items} />
+    ) : (
+      <div class="py-24 text-center text-gray-600">No anime found in the {genre} genre.</div>
+    )}
+
+    {data?.hasNext && (
+      <div class="mt-12 flex justify-center gap-4">
+        <a href={`?page=${page - 1}`} class={`rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium ${page === 1 ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'}`}>Previous</a>
+        <a href={`?page=${page + 1}`} class="rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium hover:bg-gray-50">Next Page</a>
+      </div>
+    )}
+  </div>
+</Layout>

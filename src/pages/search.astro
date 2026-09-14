@@ -1,0 +1,58 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AnimeSection from '../components/content/AnimeSection.astro';
+import { getCatalogue } from '../lib/anilist/client';
+
+const { searchParams } = Astro.url;
+const page = parseInt(searchParams.get('page') ?? '1');
+const query = searchParams.get('q') ?? '';
+
+let data: Awaited<ReturnType<typeof getCatalogue>> | null = null;
+let error: string | null = null;
+try {
+  data = await getCatalogue({ page, search: query });
+} catch (cause) {
+  error = cause instanceof Error ? cause.message : 'The search service is temporarily unavailable.';
+}
+---
+
+<Layout title={query ? `Searching for "${query}" — AnimeKatana` : 'Search Anime — AnimeKatana'}>
+  <section class="bg-parchment-100 py-12 sm:py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="font-serif text-3xl font-bold text-evergreen-950 sm:text-4xl">Search Results</h1>
+          <p class="mt-2 text-gray-600">Showing results for <span class="font-bold text-gray-900">"{query}"</span></p>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="/browse" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50">Advanced Filters</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    {error ? (
+      <section class="rounded-lg border border-terracotta-200 bg-terracotta-50 p-6">
+        <h2 class="font-serif text-2xl font-bold text-terracotta-900">Search failed.</h2>
+        <p class="mt-2 text-terracotta-800">{error}</p>
+      </section>
+    ) : data && data.items.length > 0 ? (
+      <AnimeSection title="Matches" anime={data.items} />
+    ) : (
+      <div class="flex flex-col items-center justify-center py-24 text-center">
+        <div class="mb-6 rounded-full bg-parchment-200 p-6 text-4xl">🔍</div>
+        <h2 class="font-serif text-2xl font-bold text-gray-900">No matches found.</h2>
+        <p class="mt-2 max-w-md text-gray-600">We couldn't find any anime matching your query. Try a different keyword or browse our catalogue.</p>
+        <a href="/browse" class="mt-6 rounded-md bg-evergreen-800 px-6 py-3 font-semibold text-white hover:bg-evergreen-700">Explore Catalogue</a>
+      </div>
+    )}
+
+    {data?.hasNext && (
+      <div class="mt-12 flex justify-center gap-4">
+        <a href={`?q=${query}&page=${page - 1}`} class={`rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium ${page === 1 ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'}`}>Previous</a>
+        <a href={`?q=${query}&page=${page + 1}`} class="rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium hover:bg-gray-50">Next Page</a>
+      </div>
+    )}
+  </div>
+</Layout>

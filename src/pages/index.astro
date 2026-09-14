@@ -1,0 +1,56 @@
+---
+import AnimeSection from '../components/content/AnimeSection.astro';
+import SearchBar from '../components/islands/SearchBar';
+import Layout from '../layouts/Layout.astro';
+import { getHome } from '../lib/anilist/client';
+import { currentSeason, humanSeason } from '../lib/season';
+
+const now = currentSeason();
+let data: Awaited<ReturnType<typeof getHome>> | null = null;
+let error: string | null = null;
+try {
+  data = await getHome(now.year, now.season);
+} catch (cause) {
+  error = cause instanceof Error ? cause.message : 'The catalogue could not be loaded.';
+}
+const feature = data?.trending.items[0];
+const featureTitle = feature?.title.english || feature?.title.romaji || feature?.title.native || 'Your next story is waiting';
+---
+
+<Layout title="AnimeKatana — Discover your next story">
+  <section class="border-b border-parchment-200 bg-parchment-100">
+    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:px-8 lg:py-20">
+      <div class="flex flex-col justify-center">
+        <p class="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-terracotta-700">Editorial anime discovery</p>
+        <h1 class="max-w-3xl font-serif text-5xl font-bold leading-[1.03] text-evergreen-950 sm:text-6xl">Find the story that stays with you.</h1>
+        <p class="mt-6 max-w-xl text-lg leading-relaxed text-gray-700">A considered catalogue for every mood, season, and late-night episode. Deep AniList context, then playback only when you decide to press play.</p>
+        <div class="mt-8 max-w-xl"><SearchBar /></div>
+        <div class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-600">
+          <a class="font-semibold text-evergreen-800 hover:text-terracotta-700" href="/season">Explore {humanSeason(now.season)} {now.year} →</a>
+          <a class="font-semibold text-evergreen-800 hover:text-terracotta-700" href="/schedule">See what airs next →</a>
+        </div>
+      </div>
+      <div class="relative min-h-[26rem] overflow-hidden rounded-lg bg-evergreen-950 shadow-xl">
+        {feature ? <>
+          <img src={feature.bannerImage || feature.coverImage.extraLarge} alt="" class="absolute inset-0 h-full w-full object-cover opacity-70" fetchpriority="high" />
+          <div class="absolute inset-0 bg-gradient-to-t from-evergreen-950 via-evergreen-950/40 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 p-7 text-white sm:p-9">
+            <p class="text-xs font-bold uppercase tracking-[.18em] text-parchment-300">Currently trending</p>
+            <h2 class="mt-2 font-serif text-3xl font-bold leading-tight">{featureTitle}</h2>
+            <div class="mt-4 flex flex-wrap gap-3 text-sm text-white/85"><span>{feature.format}</span><span>•</span><span>{feature.score ?? '—'}% community score</span>{feature.episodes && <><span>•</span><span>{feature.episodes} episodes</span></>}</div>
+            <a href={`/anime/${feature.id}/${feature.slug}`} class="mt-6 inline-flex rounded-md bg-parchment-100 px-5 py-3 text-sm font-bold text-evergreen-950 hover:bg-white">Read the full guide</a>
+          </div>
+        </> : <div class="flex h-full items-center justify-center p-10 text-center text-parchment-100">A new story is nearly ready.</div>}
+      </div>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {error ? <section class="my-12 rounded-lg border border-terracotta-200 bg-terracotta-50 p-6"><h2 class="font-serif text-2xl font-bold text-terracotta-900">The catalogue needs a moment.</h2><p class="mt-2 text-terracotta-800">{error}</p><a href={Astro.url.pathname} class="mt-4 inline-flex font-semibold text-terracotta-800 underline">Try again</a></section> : data && <>
+      <AnimeSection title="In the conversation" eyebrow="Trending now" description="The titles anime fans are reaching for today." anime={data.trending.items} viewAllHref="/browse?sort=TRENDING_DESC" />
+      <AnimeSection title={`${humanSeason(now.season)} ${now.year}, considered`} eyebrow="This season" description="The defining shows of the current broadcast season." anime={data.seasonal.items} viewAllHref={`/season/${now.year}/${now.season.toLowerCase()}`} />
+      <AnimeSection title="Enduring favourites" eyebrow="Popular" description="Beloved series with the reach to become your next obsession." anime={data.popular.items} viewAllHref="/rankings" ranked />
+      <AnimeSection title="On the horizon" eyebrow="Upcoming" description="Stories worth putting on your calendar." anime={data.upcoming.items} viewAllHref="/browse?status=NOT_YET_RELEASED" />
+    </>}
+  </div>
+</Layout>
