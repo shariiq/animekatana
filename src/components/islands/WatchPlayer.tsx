@@ -113,6 +113,7 @@ export const WatchPlayer = component$<WatchPlayerProps>(({ animeId, episodeNumbe
     if (!stream || !element) return;
 
     let destroyHls: (() => void) | undefined;
+    let disposed = false;
     element.replaceChildren();
     element.removeAttribute('src');
     for (const subtitle of stream.subtitles) {
@@ -130,14 +131,15 @@ export const WatchPlayer = component$<WatchPlayerProps>(({ animeId, episodeNumbe
     element.addEventListener('loadedmetadata', restorePosition, { once: true });
     element.addEventListener('timeupdate', savePosition);
 
-    if (!stream.is_hls || element.canPlayType('application/vnd.apple.mpegurl')) {
-      // AniSource returns its protected HLS streams through /proxy/hls/{token};
-      // native HLS can consume that URL directly. Direct streams may only work
-      // without restricted headers because browsers cannot attach arbitrary
-      // request headers to a <video> resource.
+    const hasRequiredHeaders = Object.keys(stream.headers ?? {}).length > 0;
+    if (!stream.is_hls || (!hasRequiredHeaders && element.canPlayType('application/vnd.apple.mpegurl'))) {
+      // AniSource proxy URLs work with native HLS when no custom headers are
+      // required. Protected HLS always goes through hls.js so every manifest,
+      // key, and segment request receives the source-provided headers.
       element.src = stream.url;
     } else {
       import('hls.js').then(({ default: Hls }) => {
+        if (disposed) return;
         if (!Hls.isSupported()) { state.error = 'This browser cannot play the selected HLS stream.'; return; }
         const hls = new Hls({
           // hls.js can attach the source-provided headers to manifest, key,
@@ -162,7 +164,13 @@ export const WatchPlayer = component$<WatchPlayerProps>(({ animeId, episodeNumbe
       }).catch(() => { state.error = 'The HLS playback engine could not be loaded.'; });
     }
 
-    cleanup(() => { element.removeEventListener('timeupdate', savePosition); destroyHls?.(); });
+    element.load();
+    cleanup(() => {
+      disposed = true;
+      element.removeEventListener('timeupdate', savePosition);
+      element.removeEventListener('loadedmetadata', restorePosition);
+      destroyHls?.();
+    });
   });
 
   const activeStream = state.streams.find((stream) => stream.quality === state.selectedQuality);

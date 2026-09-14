@@ -16,11 +16,15 @@ try {
   error = cause instanceof Error ? cause.message : 'The schedule could not be loaded.';
 }
 
-const groups = data ? [...new Set(data.items.map((i) => i.airingAt))].sort((a, b) => a - b).map((airingAt) => ({
-  airingAt,
-  dateStr: new Date(airingAt * 1000).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
-  items: data.items.filter((i: ScheduleItem) => i.airingAt === airingAt),
-})) : [];
+const scheduleGroups = new Map<string, ScheduleItem[]>();
+for (const item of data?.items ?? []) {
+  const day = new Date(item.airingAt * 1000).toDateString();
+  scheduleGroups.set(day, [...(scheduleGroups.get(day) ?? []), item]);
+}
+const groups = [...scheduleGroups.values()].map((items) => ({
+  dateStr: new Date(items[0].airingAt * 1000).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+  items: items.sort((a, b) => a.airingAt - b.airingAt),
+}));
 ---
 
 <Layout title="Airing Schedule — AnimeKatana">
@@ -41,8 +45,8 @@ const groups = data ? [...new Set(data.items.map((i) => i.airingAt))].sort((a, b
             {group.items.map((item: ScheduleItem) => <div class="surface-card group flex gap-4 p-4">
               <img src={item.media.coverImage.large} loading="lazy" decoding="async" width="48" height="80" class="h-20 w-12 shrink-0 rounded object-cover" alt="" />
               <div class="min-w-0">
-                <p class="eyebrow">{item.episode} Episode</p>
-                <a href={`/anime/${item.media.id}/${item.media.slug}`} class="anime-card-title mt-1 block">{item.media.title.romaji ?? item.media.title.english}</a>
+                <p class="eyebrow">{new Date(item.airingAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · Episode {item.episode}</p>
+                <a href={`/anime/${item.media.id}/${item.media.slug}`} class="anime-card-title mt-1 block">{item.media.title.english || item.media.title.romaji}</a>
                 <a href={`/anime/${item.media.id}/${item.media.slug}/watch/${item.episode}`} class="btn-primary mt-3 py-1.5 px-3 text-sm">Watch now</a>
               </div>
             </div>)}
