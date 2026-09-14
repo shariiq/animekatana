@@ -1,0 +1,17 @@
+#!/bin/sh
+# AnimeKatana pre-push hook
+# Runs complete verification suite before push
+
+set -e
+
+echo "Running pre-push checks..."
+
+# Complete test suite
+echo "→ Running tests..."
+npm test
+
+# Production build
+echo "→ Building..."
+npm run build
+
+echo "✓ Pre-push checks passed"

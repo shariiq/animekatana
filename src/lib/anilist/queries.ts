@@ -34,15 +34,44 @@ export const HOME_QUERY = `query Home($season: MediaSeason, $year: Int) {
   upcoming: Page(page: 1, perPage: 10) { ${PAGE_INFO} media(type: ANIME, status: NOT_YET_RELEASED, sort: POPULARITY_DESC) { ${MEDIA_CARD} } }
 }`;
 
-export const CATALOGUE_QUERY = `query Catalogue(
-  $page: Int!, $perPage: Int!, $search: String, $season: MediaSeason, $seasonYear: Int,
-  $format: MediaFormat, $status: MediaStatus, $genre: String, $tag: String, $sort: [MediaSort]
-) {
-  Page(page: $page, perPage: $perPage) {
-    ${PAGE_INFO}
-    media(type: ANIME, search: $search, season: $season, seasonYear: $seasonYear, format: $format, status: $status, genre: $genre, tag: $tag, sort: $sort) { ${MEDIA_CARD} }
-  }
-}`;
+type CatalogueFilters = {
+	season?: string;
+	year?: number;
+	format?: string;
+	status?: string;
+	genre?: string;
+	tag?: string;
+};
+
+/**
+ * AniList treats null values for some enum filters as a restrictive filter.
+ * Only declare and send optional arguments that the caller actually selected.
+ */
+export function catalogueQuery(filters: CatalogueFilters): string {
+	const definitions = ["$page: Int!", "$perPage: Int!", "$search: String", "$sort: [MediaSort]"];
+	const arguments_ = ["type: ANIME", "search: $search", "sort: $sort"];
+	const optional = [
+		["season", "MediaSeason", filters.season],
+		["seasonYear", "Int", filters.year],
+		["format", "MediaFormat", filters.format],
+		["status", "MediaStatus", filters.status],
+		["genre", "String", filters.genre],
+		["tag", "String", filters.tag],
+	] as const;
+
+	for (const [name, type, value] of optional) {
+		if (value === undefined) continue;
+		definitions.push(`$${name}: ${type}`);
+		arguments_.push(`${name}: $${name}`);
+	}
+
+	return `query Catalogue(${definitions.join(", ")}) {
+    Page(page: $page, perPage: $perPage) {
+      ${PAGE_INFO}
+      media(${arguments_.join(", ")}) { ${MEDIA_CARD} }
+    }
+  }`;
+}
 
 export const DETAIL_QUERY = `query Detail($id: Int!) {
   Media(id: $id, type: ANIME) {

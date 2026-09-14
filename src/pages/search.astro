@@ -1,10 +1,10 @@
 ---
-import Layout from '../layouts/Layout.astro';
 import AnimeSection from '../components/content/AnimeSection.astro';
+import Layout from '../layouts/Layout.astro';
 import { getCatalogue } from '../lib/anilist/client';
 
 const { searchParams } = Astro.url;
-const page = parseInt(searchParams.get('page') ?? '1');
+const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
 const query = searchParams.get('q') ?? '';
 
 let data: Awaited<ReturnType<typeof getCatalogue>> | null = null;
@@ -16,43 +16,33 @@ try {
 }
 ---
 
-<Layout title={query ? `Searching for "${query}" — AnimeKatana` : 'Search Anime — AnimeKatana'}>
-  <section class="bg-parchment-100 py-12 sm:py-16">
+<Layout title={query ? `Results for "${query}" — AnimeKatana` : 'Search Anime — AnimeKatana'}>
+  <section class="page-hero">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 class="font-serif text-3xl font-bold text-evergreen-950 sm:text-4xl">Search Results</h1>
-          <p class="mt-2 text-gray-600">Showing results for <span class="font-bold text-gray-900">"{query}"</span></p>
+          <p class="eyebrow">Anime search</p>
+          <h1 class="page-hero-title mt-2">{query ? `Results for "${query}"` : 'Search'}</h1>
         </div>
-        <div class="flex items-center gap-3">
-          <a href="/browse" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50">Advanced Filters</a>
-        </div>
+        <a href="/browse" class="btn-secondary self-start">Browse by filter</a>
       </div>
     </div>
   </section>
 
-  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-    {error ? (
-      <section class="rounded-lg border border-terracotta-200 bg-terracotta-50 p-6">
-        <h2 class="font-serif text-2xl font-bold text-terracotta-900">Search failed.</h2>
-        <p class="mt-2 text-terracotta-800">{error}</p>
-      </section>
-    ) : data && data.items.length > 0 ? (
-      <AnimeSection title="Matches" anime={data.items} />
-    ) : (
-      <div class="flex flex-col items-center justify-center py-24 text-center">
-        <div class="mb-6 rounded-full bg-parchment-200 p-6 text-4xl">🔍</div>
-        <h2 class="font-serif text-2xl font-bold text-gray-900">No matches found.</h2>
-        <p class="mt-2 max-w-md text-gray-600">We couldn't find any anime matching your query. Try a different keyword or browse our catalogue.</p>
-        <a href="/browse" class="mt-6 rounded-md bg-evergreen-800 px-6 py-3 font-semibold text-white hover:bg-evergreen-700">Explore Catalogue</a>
-      </div>
-    )}
+  <div class="page-shell">
+    {error ? <div class="state-error" role="alert"><h2 class="heading-4 text-terracotta-900">Search failed.</h2><p class="mt-2">{error}</p></div>
+      : data && data.items.length > 0 ? <AnimeSection title="Matches" eyebrow={`${data.items.length} titles on this page`} anime={data.items} />
+      : <div class="state-empty">
+          <span class="mb-4 block text-5xl" aria-hidden="true">🔍</span>
+          <h2 class="heading-3">{query ? 'Nothing matches your terms.' : 'Enter a search to begin.'}</h2>
+          <p class="body-sm mt-2">{query ? 'Try a different keyword or browse the catalogue directly.' : 'Search by title, theme, or character name.'}</p>
+          <a href="/browse" class="btn-primary mt-6">Explore catalogue</a>
+        </div>}
 
-    {data?.hasNext && (
-      <div class="mt-12 flex justify-center gap-4">
-        <a href={`?q=${query}&page=${page - 1}`} class={`rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium ${page === 1 ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'}`}>Previous</a>
-        <a href={`?q=${query}&page=${page + 1}`} class="rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium hover:bg-gray-50">Next Page</a>
-      </div>
-    )}
+    {data && (page > 1 || data.hasNext) && <nav class="pagination" aria-label="Search pages">
+      <a href={`?q=${encodeURIComponent(query)}&page=${page - 1}`} class:list={['pagination-link', page === 1 && 'pagination-link-disabled']} aria-disabled={page === 1 ? 'true' : undefined}>Previous</a>
+      <span class="px-2 text-sm font-semibold text-gray-600">Page {page}</span>
+      <a href={`?q=${encodeURIComponent(query)}&page=${page + 1}`} class:list={['pagination-link', !data.hasNext && 'pagination-link-disabled']} aria-disabled={!data.hasNext ? 'true' : undefined}>Next</a>
+    </nav>}
   </div>
 </Layout>

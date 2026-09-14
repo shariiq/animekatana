@@ -1,5 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { currentSeason } from '../lib/season';
+
+const now = currentSeason();
 ---
 
 <Layout title="About — AnimeKatana">
@@ -48,11 +51,11 @@ import Layout from '../layouts/Layout.astro';
             <span class="text-2xl">🔍</span>
             <div><div class="font-semibold text-evergreen-950">Browse</div><div class="text-sm text-gray-600">Filter by genre, format, status, season, and more</div></div>
           </a>
-          <a href="/season" class="flex items-center gap-3 rounded-lg border border-parchment-200 p-4 hover:border-evergreen-500 hover:bg-evergreen-50 transition">
+          <a href={`/season/${now.year}/${now.season.toLowerCase()}`} class="flex items-center gap-3 rounded-lg border border-parchment-200 p-4 hover:border-evergreen-500 hover:bg-evergreen-50 transition-colors">
             <span class="text-2xl">📅</span>
             <div><div class="font-semibold text-evergreen-950">Seasonal</div><div class="text-sm text-gray-600">What's airing right now</div></div>
           </a>
-          <a href="/schedule" class="flex items-center gap-3 rounded-lg border border-parchment-200 p-4 hover:border-evergreen-500 hover:bg-evergreen-50 transition">
+          <a href="/schedule" class="flex items-center gap-3 rounded-lg border border-parchment-200 p-4 hover:border-evergreen-500 hover:bg-evergreen-50 transition-colors">
             <span class="text-2xl">⏰</span>
             <div><div class="font-semibold text-evergreen-950">Schedule</div><div class="text-sm text-gray-600">7-day airing agenda</div></div>
           </a>

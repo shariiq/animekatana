@@ -1,41 +1,43 @@
 {
-  "name": "animekatana",
-  "type": "module",
-  "version": "0.0.1",
-  "engines": {
-    "node": ">=22.12.0"
-  },
-  "scripts": {
-    "dev": "astro dev --host 0.0.0.0",
-    "build": "astro check && astro build",
-    "preview": "astro preview",
-    "astro": "astro",
-    "check": "astro check",
-    "test": "vitest run",
-    "format": "biome format --write .",
-    "lint": "biome check ."
-  },
-  "dependencies": {
-    "@astrojs/check": "^0.9.10",
-    "@astrojs/tailwind": "^6.0.2",
-    "@astrojs/vercel": "^8.2.11",
-    "@builder.io/qwik": "^1.20.0",
-    "@qwikdev/astro": "^0.8.3",
-    "astro": "^5.18.2",
-    "hls.js": "^1.7.3",
-    "typescript": "^5.9.3",
-    "zod": "^4.6.5"
-  },
-  "allowScripts": {
-    "esbuild": true
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.5.13",
-    "@types/node": "^26.5.1",
-    "autoprefixer": "^10.6.0",
-    "postcss": "^8.5.28",
-    "tailwindcss": "^3.4.19",
-    "vitest": "^5.0.0"
-  },
-  "description": "A warm editorial anime discovery and watch destination"
+	"name": "animekatana",
+	"type": "module",
+	"version": "0.0.1",
+	"engines": {
+		"node": ">=22.12.0"
+	},
+	"scripts": {
+		"dev": "astro dev --host 0.0.0.0",
+		"build": "astro check && astro build",
+		"preview": "astro preview",
+		"astro": "astro",
+		"check": "astro check",
+		"test": "vitest run",
+		"format": "biome format --write .",
+		"format:check": "biome format .",
+		"lint": "biome check .",
+		"postinstall": "git config core.hooksPath .githooks || true"
+	},
+	"dependencies": {
+		"@astrojs/check": "^0.9.10",
+		"@astrojs/tailwind": "^6.0.2",
+		"@astrojs/vercel": "^8.2.11",
+		"@builder.io/qwik": "^1.20.0",
+		"@qwikdev/astro": "^0.8.3",
+		"astro": "^5.18.2",
+		"hls.js": "^1.7.3",
+		"typescript": "^5.9.3",
+		"zod": "^4.6.5"
+	},
+	"allowScripts": {
+		"esbuild": true
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.13",
+		"@types/node": "^26.5.1",
+		"autoprefixer": "^10.6.0",
+		"postcss": "^8.5.28",
+		"tailwindcss": "^3.4.19",
+		"vitest": "^5.0.0"
+	},
+	"description": "A warm editorial anime discovery and watch destination"
 }

@@ -2,25 +2,264 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base styles for paper-inspired feel */
-html {
-  font-size: 16px;
+/* ── Design Tokens ─────────────────────────────────────────────── */
+
+@layer base {
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-parchment-50 text-gray-900;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-parchment-100; }
+  ::-webkit-scrollbar-thumb { @apply bg-parchment-400 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-parchment-600; }
+
+  /* Text selection */
+  ::selection { @apply bg-evergreen-200 text-evergreen-950; }
+
+  /* Focus ring */
+  :focus-visible {
+    @apply outline-none ring-2 ring-evergreen-500 ring-offset-2 ring-offset-parchment-50;
+  }
+
+  /* Remove default button styles where needed */
+  button { @apply cursor-pointer; }
 }
 
-body {
-  @apply bg-parchment-50 text-gray-900 antialiased;
+/* ── Typography Scale ───────────────────────────────────────────── */
+
+@layer components {
+  .heading-1 {
+    @apply font-serif text-4xl font-bold tracking-tight text-evergreen-950 sm:text-5xl;
+  }
+  .heading-2 {
+    @apply font-serif text-3xl font-bold tracking-tight text-evergreen-950 sm:text-4xl;
+  }
+  .heading-3 {
+    @apply font-serif text-2xl font-bold text-evergreen-950;
+  }
+  .heading-4 {
+    @apply font-serif text-xl font-bold text-evergreen-900;
+  }
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.18em] text-terracotta-700;
+  }
+  .body-lg {
+    @apply text-lg leading-relaxed text-gray-700;
+  }
+  .body-sm {
+    @apply text-sm leading-relaxed text-gray-600;
+  }
 }
 
-/* Smooth transitions for better UX */
-* {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-duration: 0.2s;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+/* ── Surface System ─────────────────────────────────────────────── */
+
+@layer components {
+  /* Primary surface – the canvas */
+  .surface-canvas { @apply bg-parchment-50; }
+
+  /* Raised surface – subtle elevation */
+  .surface-raised {
+    @apply bg-parchment-100 border border-parchment-200;
+  }
+
+  /* Card surface – distinct entry */
+  .surface-card {
+    @apply bg-white border border-parchment-200;
+  }
+
+  /* Inset surface – nested content */
+  .surface-inset {
+    @apply bg-parchment-50 border border-parchment-200;
+  }
 }
 
-/* Reduce motion for accessibility */
+/* ── Navigation ─────────────────────────────────────────────────── */
+
+@layer components {
+  .nav-link {
+    @apply text-sm font-medium text-gray-600 hover:text-evergreen-800 transition-colors duration-150;
+  }
+  .nav-link-active {
+    @apply text-sm font-medium text-evergreen-800 border-b-2 border-evergreen-800;
+  }
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-evergreen-900 px-5 py-2.5
+           font-semibold text-white transition-colors duration-150
+           hover:bg-evergreen-800 focus:outline-none focus:ring-2 focus:ring-evergreen-500 focus:ring-offset-2;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-parchment-300
+           bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 transition-colors duration-150
+           hover:border-evergreen-400 hover:text-evergreen-800 focus:outline-none focus:ring-2 focus:ring-evergreen-500 focus:ring-offset-2;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5
+           text-sm font-medium text-gray-600 transition-colors duration-150
+           hover:bg-parchment-100 hover:text-evergreen-800 focus:outline-none focus:ring-2 focus:ring-evergreen-500;
+  }
+  .btn-icon {
+    @apply inline-flex items-center justify-center rounded-md p-2 text-gray-500
+           transition-colors duration-150 hover:bg-parchment-100 hover:text-evergreen-800
+           focus:outline-none focus:ring-2 focus:ring-evergreen-500;
+  }
+}
+
+/* ── Form Elements ──────────────────────────────────────────────── */
+
+@layer components {
+  .input-search {
+    @apply w-full rounded-md border border-parchment-300 bg-white py-3 pl-10 pr-4
+           text-gray-900 placeholder-gray-400 shadow-sm
+           focus:border-evergreen-400 focus:outline-none focus:ring-2 focus:ring-evergreen-200;
+  }
+}
+
+/* ── Anime Card ─────────────────────────────────────────────────── */
+
+@layer components {
+  .anime-card {
+    @apply relative overflow-hidden bg-white border border-parchment-200
+           transition-all duration-200 hover:border-parchment-300 hover:shadow-md hover:-translate-y-0.5;
+  }
+  .anime-card-image {
+    @apply relative aspect-[3/4] overflow-hidden bg-parchment-100;
+  }
+  .anime-card-img {
+    @apply h-full w-full object-cover transition-transform duration-300 group-hover:scale-105;
+  }
+  .anime-card-overlay {
+    @apply absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 pt-12;
+  }
+  .anime-card-body {
+    @apply p-3;
+  }
+  .anime-card-title {
+    @apply font-serif text-sm font-bold leading-snug text-gray-900 line-clamp-2
+           group-hover:text-evergreen-800 transition-colors duration-150;
+  }
+  .anime-card-meta {
+    @apply mt-1.5 flex flex-wrap gap-1;
+  }
+}
+
+/* ── Section ────────────────────────────────────────────────────── */
+
+@layer components {
+  .section-header {
+    @apply mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between;
+  }
+  .section-title { @apply heading-2; }
+  .section-eyebrow { @apply eyebrow mb-1; }
+  .section-link {
+    @apply inline-flex items-center gap-1.5 text-sm font-semibold text-evergreen-700
+           transition-colors duration-150 hover:text-terracotta-700;
+  }
+}
+
+/* ── Page Hero ──────────────────────────────────────────────────── */
+
+@layer components {
+  .page-hero {
+    @apply border-b border-parchment-200 bg-parchment-100 py-12 sm:py-16;
+  }
+  .page-hero-title { @apply heading-1; }
+  .page-hero-description { @apply mt-4 max-w-2xl body-lg; }
+  .page-shell { @apply mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8; }
+}
+
+/* ── Filters / Pagination ───────────────────────────────────────── */
+
+@layer components {
+  .filter-chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-parchment-300 bg-white px-3 py-1.5
+           text-xs font-bold text-evergreen-800 transition-colors duration-150
+           hover:border-evergreen-400 hover:bg-evergreen-50;
+  }
+  .filter-option {
+    @apply block rounded-md px-3 py-2 text-sm text-gray-600 transition-colors duration-150
+           hover:bg-parchment-100 hover:text-evergreen-800;
+  }
+  .filter-option-active { @apply bg-evergreen-50 font-bold text-evergreen-900; }
+  .pagination { @apply mt-12 flex items-center justify-center gap-3; }
+  .pagination-link { @apply btn-secondary; }
+  .pagination-link-disabled { @apply pointer-events-none opacity-40; }
+}
+
+/* ── Error / Empty / Loading States ────────────────────────────── */
+
+@layer components {
+  .state-empty {
+    @apply flex flex-col items-center justify-center rounded-lg border-2 border-dashed
+           border-parchment-300 bg-parchment-50 p-16 text-center;
+  }
+  .state-error {
+    @apply rounded-lg border border-terracotta-200 bg-terracotta-50 p-5 text-terracotta-900;
+  }
+  .state-loading {
+    @apply flex items-center gap-2 text-sm text-gray-600;
+  }
+}
+
+/* ── Anime Detail Layout ────────────────────────────────────────── */
+
+@layer components {
+  .anime-banner {
+    @apply relative h-72 w-full overflow-hidden bg-parchment-200 sm:h-96;
+  }
+  .anime-banner-img {
+    @apply h-full w-full object-cover;
+  }
+  .anime-banner-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-parchment-50 via-parchment-50/60 to-transparent;
+  }
+}
+
+/* ── Responsive Grid ─────────────────────────────────────────────── */
+
+.anime-grid {
+  @apply grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-5;
+}
+
+/* ── Episode / Server selectors (watch page) ────────────────────── */
+
+@layer components {
+  .episode-btn {
+    @apply rounded p-2 text-center text-sm transition-colors duration-150;
+  }
+  .episode-btn-active {
+    @apply bg-evergreen-900 font-bold text-white;
+  }
+  .episode-btn-inactive {
+    @apply bg-parchment-100 hover:bg-parchment-200 text-gray-700;
+  }
+  .server-btn {
+    @apply w-full rounded border px-3 py-2 text-left text-sm transition-colors duration-150;
+  }
+  .server-btn-active {
+    @apply border-evergreen-500 bg-evergreen-50 font-semibold text-evergreen-900;
+  }
+  .server-btn-inactive {
+    @apply border-parchment-300 text-gray-600 hover:bg-parchment-100 hover:border-parchment-400;
+  }
+}
+
+/* ── Reduce motion ───────────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

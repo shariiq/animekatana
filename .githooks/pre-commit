@@ -1,0 +1,21 @@
+#!/bin/sh
+# AnimeKatana pre-commit hook
+# Runs fast local checks before commit
+
+set -e
+
+echo "Running pre-commit checks..."
+
+# Check formatting without changing the index or working tree
+echo "→ Formatting..."
+npm run format:check
+
+# Lint (fail on errors only)
+echo "→ Linting..."
+npm run lint
+
+# Type check
+echo "→ Type checking..."
+npm run check
+
+echo "✓ Pre-commit checks passed"
