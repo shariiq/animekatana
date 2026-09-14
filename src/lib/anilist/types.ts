@@ -1,7 +1,6 @@
 /**
  * AniList API specific types.
  */
-import type { Anime, PaginatedResponse } from '../types';
 
 export interface AniListAnime {
   id: number;

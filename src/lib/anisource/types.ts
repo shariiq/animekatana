@@ -1,5 +1,3 @@
-import type { Anime, Episode, Server, Stream } from '../types';
-
 export interface AniSourceAnime {
   id: string;
   title: string;

@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import AnimeSection from '../components/content/AnimeSection.astro';
-import { getSchedule, date } from '../lib/anilist/client';
+import { getSchedule } from '../lib/anilist/client';
 
 const now = new Date();
 const from = Math.floor(now.getTime() / 1000);
