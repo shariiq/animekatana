@@ -1,25 +1,25 @@
 ---
-import Layout from '../../../../layouts/Layout.astro';
-import { getAnime } from '../../../../lib/anilist/client';
+import Layout from "../../../../layouts/Layout.astro";
+import { getAnime } from "../../../../lib/anilist/client";
 
 const { id } = Astro.params;
 const animeId = parseInt(id!);
 
 let data: Awaited<ReturnType<typeof getAnime>> | null = null;
 try {
-  data = await getAnime(animeId);
-} catch {
-}
+	data = await getAnime(animeId);
+} catch {}
 
 if (!data) {
-  return Astro.redirect('/404');
+	return Astro.redirect("/404");
 }
 
 const { anime, raw } = data;
+const staff = raw.staff?.edges ?? [];
 ---
 
 <Layout title={`${anime.title.english || anime.title.romaji} — Staff — AnimeKatana`}>
-  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+  <div class="page-shell py-10 sm:py-12">
     <div class="space-y-8">
       <div class="flex items-center justify-between space-x-6">
         <a href={`/anime/${anime.id}/${anime.slug}`} class="text-sm font-medium text-gray-600 hover:text-evergreen-700">
@@ -32,9 +32,9 @@ const { anime, raw } = data;
 
       <section class="space-y-6">
         <h2 class="font-serif text-2xl font-bold text-evergreen-900">Staff</h2>
-        {raw.staff?.edges?.length > 0 ? (
+        {staff.length > 0 ? (
           <div class="space-y-4">
-            {raw.staff.edges.map(({ role, node }: { role: string; node: any }) => (
+            {staff.map(({ role, node }) => (
               <div class="flex items-start gap-4">
                 <img src={node.image.large} class="h-12 w-8 object-cover rounded" alt="" />
                 <div class="space-y-1">

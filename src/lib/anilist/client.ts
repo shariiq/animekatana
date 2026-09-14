@@ -2,6 +2,15 @@ import { SingleFlight } from "../cache/single-flight";
 import { TTLCache } from "../cache/ttl-cache";
 import type { Anime, PaginatedResponse } from "../types";
 import { catalogueQuery, DETAIL_QUERY, HOME_QUERY, SCHEDULE_QUERY } from "./queries";
+import type {
+	RawCatalogueData,
+	RawDateParts,
+	RawDetailData,
+	RawHomeData,
+	RawMedia,
+	RawPage,
+	RawScheduleData,
+} from "./raw-types";
 
 const endpoint = "https://graphql.anilist.co";
 const cache = new TTLCache<unknown>();
@@ -16,14 +25,7 @@ export class AniListError extends Error {
 	}
 }
 
-type DateParts = {
-	year: number | null;
-	month: number | null;
-	day: number | null;
-} | null;
-type RawMedia = Record<string, any>;
-
-export function date(parts: DateParts): string | null {
+export function date(parts: RawDateParts | null): string | null {
 	if (!parts?.year) return null;
 	return [parts.year, parts.month ?? 1, parts.day ?? 1]
 		.map((value, index) => (index ? String(value).padStart(2, "0") : value))
@@ -43,8 +45,7 @@ export function mapAnime(media: RawMedia): Anime {
 	const title = media.title ?? {};
 	const primary = title.english || title.romaji || title.native || `anime-${media.id}`;
 	const rank =
-		(media.rankings ?? []).find((entry: any) => entry.type === "RATED" && entry.allTime)?.rank ??
-		null;
+		(media.rankings ?? []).find((entry) => entry.type === "RATED" && entry.allTime)?.rank ?? null;
 	return {
 		id: String(media.id),
 		slug: slugify(primary),
@@ -61,7 +62,7 @@ export function mapAnime(media: RawMedia): Anime {
 		bannerImage: media.bannerImage ?? null,
 		description: media.description ?? null,
 		genres: media.genres ?? [],
-		tags: (media.tags ?? []).filter((tag: any) => !tag.isMediaSpoiler).map((tag: any) => tag.name),
+		tags: (media.tags ?? []).filter((tag) => !tag.isMediaSpoiler).map((tag) => tag.name),
 		status:
 			(
 				{
@@ -89,7 +90,7 @@ export function mapAnime(media: RawMedia): Anime {
 		score: media.averageScore ?? null,
 		popularity: media.popularity ?? null,
 		rank,
-		studios: media.studios?.nodes?.map((studio: any) => studio.name) ?? [],
+		studios: media.studios?.nodes?.map((studio) => studio.name) ?? [],
 		producers: [],
 		startDate: date(media.startDate),
 		endDate: date(media.endDate),
@@ -101,7 +102,7 @@ export function mapAnime(media: RawMedia): Anime {
 					}
 				: null,
 		externalLinks: Object.fromEntries(
-			(media.externalLinks ?? []).map((link: any) => [link.site, link.url]),
+			(media.externalLinks ?? []).map((link) => [link.site, link.url]),
 		),
 	};
 }
@@ -138,7 +139,7 @@ async function execute<T>(
 	}) as Promise<T>;
 }
 
-function page(raw: any): PaginatedResponse<Anime> {
+function page(raw: RawPage): PaginatedResponse<Anime> {
 	return {
 		items: raw.media.map(mapAnime),
 		page: raw.pageInfo.currentPage,
@@ -148,7 +149,7 @@ function page(raw: any): PaginatedResponse<Anime> {
 }
 
 export async function getHome(year: number, season: string) {
-	const data = await execute<any>(HOME_QUERY, { year, season }, 300);
+	const data = await execute<RawHomeData>(HOME_QUERY, { year, season }, 300);
 	return {
 		trending: page(data.trending),
 		popular: page(data.popular),
@@ -189,21 +190,21 @@ export async function getCatalogue(input: {
 	if (input.status) variables.status = input.status;
 	if (input.genre) variables.genre = input.genre;
 	if (input.tag) variables.tag = input.tag;
-	const data = await execute<any>(query, variables, input.search ? 900 : 300);
+	const data = await execute<RawCatalogueData>(query, variables, input.search ? 900 : 300);
 	return page(data.Page);
 }
 
-export async function getAnime(id: number): Promise<{ anime: Anime; raw: any }> {
-	const data = await execute<any>(DETAIL_QUERY, { id }, 21_600);
+export async function getAnime(id: number): Promise<{ anime: Anime; raw: RawMedia }> {
+	const data = await execute<RawDetailData>(DETAIL_QUERY, { id }, 21_600);
 	if (!data.Media) throw new AniListError("This anime could not be found.", 404);
 	return { anime: mapAnime(data.Media), raw: data.Media };
 }
 
 export async function getSchedule(from: number, to: number, pageNumber = 1) {
-	const data = await execute<any>(SCHEDULE_QUERY, { from, to, page: pageNumber }, 120);
+	const data = await execute<RawScheduleData>(SCHEDULE_QUERY, { from, to, page: pageNumber }, 120);
 	return {
 		pageInfo: data.Page.pageInfo,
-		items: data.Page.airingSchedules.map((item: any) => ({
+		items: data.Page.airingSchedules.map((item) => ({
 			...item,
 			media: mapAnime(item.media),
 		})),
