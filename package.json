@@ -19,11 +19,10 @@
 	},
 	"dependencies": {
 		"@astrojs/check": "^0.9.10",
-		"@astrojs/tailwind": "^6.0.2",
-		"@astrojs/vercel": "^8.2.11",
-		"@builder.io/qwik": "^1.20.0",
-		"@qwikdev/astro": "^0.8.3",
-		"astro": "^5.18.2",
+		"@astrojs/vercel": "^11.0.10",
+		"@qwik.dev/astro": "^1.2.0",
+		"@qwik.dev/core": "^2.0.0-beta.43",
+		"astro": "^7.3.2",
 		"hls.js": "^1.7.3",
 		"typescript": "^5.9.3",
 		"zod": "^4.6.5"
@@ -33,11 +32,11 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.13",
+		"@tailwindcss/vite": "^4.3.3",
 		"@types/node": "^26.5.1",
-		"autoprefixer": "^10.6.0",
-		"postcss": "^8.5.28",
-		"tailwindcss": "^3.4.19",
-		"vitest": "^5.0.0"
+		"tailwindcss": "^4.3.3",
+		"vite": "^8.3.0",
+		"vitest": "^4.1.11"
 	},
 	"description": "A warm editorial anime discovery and watch destination"
 }

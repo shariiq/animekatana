@@ -1,4 +1,4 @@
-import { $, component$, useSignal } from "@builder.io/qwik";
+import { $, component$, useSignal } from "@qwik.dev/core";
 
 interface SearchBarProps {
 	initialQuery?: string;

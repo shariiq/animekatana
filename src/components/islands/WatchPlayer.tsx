@@ -1,4 +1,4 @@
-import { $, component$, useSignal, useStore, useVisibleTask$ } from "@builder.io/qwik";
+import { $, component$, useSignal, useStore, useVisibleTask$ } from "@qwik.dev/core";
 import { isHlsStream, type PlaybackStream, selectBrowserStream } from "../../lib/playback/player";
 
 interface Episode {
