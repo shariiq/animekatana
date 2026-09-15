@@ -1,639 +1,136 @@
 # Engineering Standard
 
-Operate at senior/principal-engineer quality.
+Operate at senior/principal-engineer quality: the simplest maintainable implementation that is correct, complete, tested, understandable, and demonstrably working — not merely code that compiles or looks plausible.
 
-The goal is not to produce code that merely looks plausible, compiles, or superficially satisfies the request. The goal is to produce the simplest maintainable implementation that is **correct, complete, tested, understandable, and demonstrably working in the real application**.
-
-Do not optimize for speed of implementation at the expense of correctness.
+Do not optimize for speed of implementation at the expense of correctness. Do not optimize for perceived thoroughness at the expense of proportionality — see **Change Classification** below, which governs every other section in this document.
 
 ---
 
-# Documentation
+## Change Classification (read this first — it governs everything below)
 
-Use current official documentation when framework or library behavior matters.
+Before working, classify the change. Every verification, testing, and gate requirement later in this document is scaled by this classification, not applied uniformly.
 
-Astro documentation:
+**Small / low-risk** — docs, comments, isolated config, CI YAML, formatting, copy/text, simple styles, narrowly-scoped refactors with unchanged behavior.
+→ Touch only directly relevant files. Make the smallest correct change. Run the focused checks that could actually be affected (e.g. a linter on the changed file, the one test file that covers it). Do not run the full suite, do not audit unrelated code, do not add tests for process compliance.
 
-https://docs.astro.build
+**Medium-risk** — normal feature work, component behavior, API client changes, routing, shared utilities.
+→ Inspect affected callers/dependencies. Run the directly relevant tests plus integration tests that touch the boundary you changed. Run lint/typecheck/build if the change could plausibly affect them. Widen scope only if something fails or looks uncertain.
 
-Consult the relevant official guide before making architecture-sensitive changes involving:
+**High-risk / cross-cutting** — auth, playback/media, deployment, caching/concurrency, security, large refactors, shared data models, production-critical infra.
+→ Do the deeper root-cause and architecture analysis. Test success/failure/edge/race paths. Run the complete applicable test suite, lint, typecheck, and production build before push.
 
-* routing and dynamic routes
-* Astro components
-* framework islands/integrations
-* content collections
-* styling or Tailwind
-* internationalization
-* SSR/adapters
-* middleware
-* image optimization
-* client directives
-* deployment behavior
-
-Do not rely on remembered APIs when the installed version may behave differently.
-
-Prefer official framework/library documentation over blogs, snippets, Stack Overflow answers, or generated assumptions.
+**Rule of thumb:** start with the fastest check capable of catching an error in *this specific change*. If it passes and the change is well-isolated, stop. Escalate only when a check fails, the change touches shared behavior, or you're genuinely unsure. Never rerun the full suite after every small edit — batch edits, then validate once at a natural boundary.
 
 ---
 
-# Understand Before Editing
+## Documentation
 
-Before making non-trivial changes:
+Use current official docs when framework/library behavior matters, especially for architecture-sensitive changes (routing, content collections, SSR/adapters, middleware, image optimization, client directives, i18n, deployment). Astro docs: https://docs.astro.build
 
-1. Read the relevant implementation.
-2. Trace the current data/control flow.
-3. Identify callers, consumers, types, tests, and side effects.
-4. Understand the intended behavior.
-5. Reproduce the bug or limitation when possible.
-6. Determine the root cause before editing.
-
-Do not modify code merely because a pattern looks suspicious.
-
-Do not rewrite functioning architecture without understanding why it exists.
-
-For unfamiliar areas, inspect enough surrounding code to make changes confidently rather than guessing from one file.
+Prefer official docs over blogs, snippets, or remembered APIs — installed versions may behave differently than training data assumes.
 
 ---
 
-# Root-Cause-First Error Handling
+## Understand Before Editing
 
-When an error or bug appears:
-
-1. Determine the actual root cause.
-2. Fix the underlying defect.
-3. Verify that the original failure no longer occurs.
-4. Verify that the fix does not create regressions elsewhere.
-
-Do not suppress or disguise failures.
-
-Do not use `try/catch`, silent fallbacks, broad optional chaining, default values, ignored promises, type assertions, or nullable states merely to make an error disappear.
-
-Use exception handling only when the exceptional condition is genuinely part of the intended control   flow.
-
-Prefer:
-
-* correct invariants
-* validation at boundaries
-* explicit state modeling
-* strong types
-* better abstractions
-* clear error propagation
-* deterministic control flow
-
-Preserve and sometimes nicely present the error to user when needed meaningful typed errors.
-
-Never convert real failures into apparently successful states.
+For non-trivial changes: read the relevant implementation, trace current data/control flow, identify callers/consumers/types/tests/side effects, and determine root cause before editing. Don't rewrite functioning architecture without understanding why it exists, and don't guess from a single file when the area is unfamiliar — depth of investigation should match the risk tier above.
 
 ---
 
-# Correctness Over Plausibility
+## Root-Cause-First Error Handling
 
-Never assume code works because:
-
-* it compiles
-* TypeScript is satisfied
-* a function looks correct
-* a unit test passes
-* the API shape seems obvious
-* another implementation used the same pattern
-
-Verify actual behavior.
-
-For external APIs, inspect real responses when practical.
-
-For UI behavior, test the real UI.
-
-For network flows, inspect actual requests and responses.
-
-For routing, open the routes.
-
-For playback/media functionality, verify actual media playback.
-
-For persistence, confirm stored state survives the expected lifecycle.
-
-For asynchronous logic, test success, failure, cancellation, retry, and race conditions where relevant.
+Fix the underlying defect, verify the original failure is gone, verify no regressions. Never suppress or disguise failures with try/catch, silent fallbacks, broad optional chaining, default values, ignored promises, type assertions, or nullable states used to make an error disappear. Use exceptions only for genuinely exceptional control flow. Prefer correct invariants, boundary validation, explicit state modeling, strong types, and clear error propagation — and preserve/surface meaningful typed errors to the user rather than converting failures into apparent successes.
 
 ---
 
-# No Fake Completeness
+## Correctness Over Plausibility
 
-Do not leave behind:
-
-* placeholder implementations
-* TODO logic required for the requested feature
-* fake/static production data
-* stubbed responses
-* dead buttons
-* dead routes
-* empty handlers
-* commented-out broken code
-* hardcoded temporary values
-* mocks used by production paths
-* silently unsupported states
-
-If something cannot be completed correctly, state the limitation clearly rather than pretending it is done.
+Code compiling, typechecking, or "looking right" is not evidence it works. Verify actual behavior proportional to risk: inspect real API responses, test the real UI, inspect actual network requests, open the routes, verify actual playback, confirm persisted state survives its lifecycle, and test success/failure/cancellation/retry/race paths where they matter to the change.
 
 ---
 
-# Code Quality
+## No Fake Completeness
 
-Write code that another experienced engineer could confidently maintain.
-
-Prefer:
-
-* small cohesive modules
-* explicit names
-* simple control flow
-* strong domain types
-* clear boundaries
-* composition over unnecessary inheritance
-* pure functions where appropriate
-* centralized shared logic where duplication would become dangerous
-* local logic where abstraction would add unnecessary indirection
-
-Avoid:
-
-* abstraction for abstraction's sake
-* premature generic frameworks
-* god objects
-* giant components
-* deeply nested conditionals
-* hidden mutation
-* duplicated business logic
-* unnecessary dependencies
-* clever code that reduces readability
-* excessive comments explaining bad code instead of improving it
-
-Comments should explain **why**, constraints, invariants, or non-obvious decisions—not narrate obvious code.
+Never leave behind placeholder implementations, required-but-missing TODO logic, fake/static production data, stubbed responses, dead buttons/routes/handlers, commented-out broken code, hardcoded temporary values, mocks on production paths, or silently unsupported states. If something can't be completed correctly, say so explicitly rather than pretending it's done.
 
 ---
 
-# Types
+## Code Quality
 
-Use TypeScript strictly.
-
-Do not weaken the type system to avoid fixing a problem.
-
-Avoid:
-
-```ts
-any
-as any
-as unknown as ...
-@ts-ignore
-@ts-expect-error
-```
-
-unless there is a concrete justified reason that cannot reasonably be modeled safely.
-
-When consuming external data, validate at the boundary instead of trusting remote JSON.
-
-Internal application code should operate on well-defined domain types rather than raw API responses whenever that improves correctness.
+Prefer small cohesive modules, explicit names, simple control flow, strong domain types, clear boundaries, pure functions where appropriate, and centralizing logic only where duplication would become dangerous. Avoid abstraction for its own sake, god objects, deeply nested conditionals, hidden mutation, duplicated business logic, and clever code that trades away readability. Comments explain *why*, constraints, and non-obvious decisions — not narrate obvious code.
 
 ---
 
-# External APIs
+## Types
 
-Treat external systems as unreliable boundaries.
-
-Account for:
-
-* malformed responses
-* missing fields
-* rate limits
-* timeouts
-* partial failures
-* unavailable resources
-* incompatible content
-* stale data
-* unexpected status codes
-
-Do not invent fields or behavior that the API does not provide.
-
-Inspect API documentation and real responses before building logic around them.
-
-Encode path and query parameters correctly.
-
-Do not discard fields that may be operationally significant.
+Use TypeScript strictly. Don't weaken the type system to dodge a problem — avoid `any`, `as any`, `as unknown as ...`, `@ts-ignore`, `@ts-expect-error` unless there's a concrete reason it can't reasonably be modeled safely. Validate external data at the boundary; internal code should operate on well-defined domain types, not raw API responses.
 
 ---
 
-# Performance
+## External APIs
 
-Performance must be designed, not claimed.
-
-Before optimizing, identify actual costs.
-
-Inspect when relevant:
-
-* network waterfalls
-* duplicated API requests
-* unnecessary client JavaScript
-* hydration
-* bundle size
-* expensive rendering
-* image loading
-* fonts
-* layout shifts
-* repeated computation
-* cache behavior
-* blocking work
-
-Prefer architectural wins over micro-optimizations.
-
-Do not introduce caching without defining:
-
-* cache key
-* lifetime
-* invalidation behavior
-* stale behavior
-* failure behavior
-
-Avoid unnecessary client-side rendering when Astro can render content on the server.
-
-Keep interactive islands as narrow as practical.
-
-Do not eagerly load functionality that is only needed after user intent.
+Treat external systems as unreliable: handle malformed responses, missing fields, rate limits, timeouts, partial failures, unavailable resources, stale data, and unexpected status codes. Don't invent fields or behavior the API doesn't document — check real docs/responses before building logic around them. Encode params correctly; don't discard operationally significant fields.
 
 ---
 
-# UI Quality
+## Performance
 
-UI work must be evaluated visually by the user and only pass if they approve, not only structurally.
-
-When modifying UI:
-
-1. Verify the affected behavior through the repository's automated test suite and production build.
-2. Inspect desktop and mobile layouts.
-3. Check alignment, hierarchy, spacing, typography, states, and responsiveness.
-4. Verify interactions.
-5. Verify loading, empty, error, disabled, hover, focus, and active states.
-6. Ensure all screens look like parts of the same product.
-
-Do not create isolated components that are individually acceptable but collectively inconsistent.
-
-Use the project's design system rather than arbitrary local styling.
-
-Avoid default-framework-looking UI unless intentionally required.
-
-Do not use random spacing, shadows, radii, colors, or typography values when design tokens exist.
+Identify actual costs before optimizing (network waterfalls, duplicated requests, unnecessary client JS, hydration, bundle size, expensive rendering, images, fonts, layout shift, cache behavior) rather than guessing. Prefer architectural wins over micro-optimizations. Any new cache needs a defined key, lifetime, invalidation, stale behavior, and failure behavior. Avoid client-side rendering when Astro can render server-side; keep interactive islands narrow; don't eagerly load functionality that's only needed after user intent.
 
 ---
 
-# Accessibility
+## UI Quality & Accessibility
 
-Interactive UI must work without a mouse.
+UI changes are judged by the user visually, not just structurally — check desktop and mobile, alignment/hierarchy/spacing/typography, loading/empty/error/disabled/hover/focus/active states, and that screens feel like the same product. Use the project's design system and tokens rather than arbitrary local values.
 
-Verify:
-
-* semantic elements
-* keyboard navigation
-* visible focus states
-* labels
-* accessible names
-* logical tab order
-* dialogs and focus management
-* reduced-motion preferences
-* sufficient contrast where practical
-
-Do not implement clickable `div`s when native interactive elements are appropriate.
+Interactive UI must work without a mouse: semantic elements (not clickable `div`s), keyboard navigation, visible focus states, labels/accessible names, logical tab order, dialog focus management, reduced-motion support, sufficient contrast.
 
 ---
 
-# Testing Philosophy
+## Testing Philosophy
 
-Verification should be performed through the repository's automated test code.
-
-Prefer the existing test architecture, especially `src/tests/`. Do not introduce Playwright, Cypress, browser-driven E2E infrastructure, or a local-server verification workflow unless the user explicitly requests it.
-
-Tests exist to verify behavior, not inflate test counts.
-
-Add or update tests for meaningful behavior affected by the change.
-
-Prefer tests that would fail if the implementation were genuinely broken.
-
-Do not write tests that merely reproduce implementation details.
-
-For bug fixes, add a regression test when practical.
-
-Use an appropriate combination of:
-
-* unit tests for deterministic logic
-* integration tests for boundaries and workflows
-* integration tests for complete user-critical behavior
-
-Mocks must not hide integration problems.
-
-Critical external workflows should be verified against real behavior where safe and practical.
+Use the repository's existing test architecture, primarily `src/tests/`. Don't introduce Playwright/Cypress/browser E2E or a local-server verification workflow unless explicitly requested. Tests verify behavior, not inflate counts — prefer tests that fail if the implementation is genuinely broken, and add a regression test for bug fixes when practical. Mocks must not hide integration problems; verify critical external workflows against real behavior where safe. Match test type to what you're changing: unit tests for deterministic logic, integration tests for boundaries and user-critical workflows.
 
 ---
 
-# Mandatory Verification Before Completion
+## Verification & Push Gate
 
-Before declaring a task complete, run the full relevant verification suite.
+Verification scope is set by the **Change Classification** above — this section describes *how* to run it, not a separate, larger requirement.
 
-For substantial changes, at minimum:
+**Before considering any change done:**
+1. Run the checks appropriate to its risk tier (see classification).
+2. Reproduce bugs before fixing them when possible; confirm the fix resolves them and doesn't regress adjacent flows.
+3. Self-review the diff as if reviewing someone else's PR: wrong assumptions, missed edge cases, duplicated logic, race conditions, stale state, leaked implementation details, accidental debug code, happy-path-only behavior.
 
-```bash
-format
-lint
-typecheck
-all tests under src/tests/
-all other applicable automated tests
-production build
-```
+**Before pushing** (scaled by risk tier — full weight only applies to medium/high-risk changes touching shared behavior):
+- Formatting, lint, and typecheck pass.
+- The tests relevant to the change pass — the *complete* `src/tests/` suite plus other applicable automated tests only for high-risk/cross-cutting changes, or when CI would otherwise be the first thing to catch a foreseeable failure.
+- Production build passes when the change could plausibly affect it.
+- No test was skipped, weakened, or rewritten just to get green; no known runtime error or regression is left unresolved; no required behavior is stubbed/mocked/hardcoded in production code.
+- If a real external dependency blocks full verification, don't claim completion — state the unverified boundary explicitly.
 
-Use the project's actual commands.
+Do not duplicate work that GitHub Actions will authoritatively re-check immediately after push, unless skipping it locally would let a foreseeable failure land in CI. Never weaken validation, assertions, mocks, or types just to force a passing result.
 
-Run **the complete `src/tests/` suite**, not only tests related to the files you changed. If additional automated integration or regression tests exist elsewhere in the repository, run those too.
-
-Do not skip failing or slow tests merely to obtain a green result. Fix the underlying defect or document a genuinely external blocker.
-
-Verify the final production build completes successfully, and use automated tests to exercise complete user flows and application behavior.
-
-Automated checks are necessary but not sufficient.
-
-For frontend changes, cover the affected UI states, responsive behavior, and interactions through automated tests where the project can test them reliably.
-
-For bug fixes:
-1. reproduce the original failure when possible;
-2. apply the fix;
-3. rerun the complete relevant test suite;
-4. verify the original failure no longer occurs;
-5. check for regressions in adjacent flows.
-
-For new functionality, test the complete end-to-end user journey, including success, loading, empty, error, retry, and important edge states—not just individual functions.
+After pushing, check CI. If it fails: find the real root cause, fix it locally, rerun the relevant checks, push the correction. Don't merge with required checks failing.
 
 ---
 
-# Self-Review
+## Git Discipline
 
-Before considering work complete, inspect your own changes as if reviewing another engineer's pull request.
+Branch-and-PR workflow by default; don't push to `main` directly unless told to.
 
-Check for:
+**Automated gates already in place** — don't duplicate them manually beyond what's needed to avoid a foreseeable CI failure:
+- Pre-commit hook: formatting, lint, types (configured via `npm install` postinstall; `git config core.hooksPath .githooks` if needed).
+- Pre-push hook: full deterministic test suite + production build.
+- CI (`CI` workflow) is the authoritative PR gate: formatting, lint, Astro/TS types, deterministic tests, production build. `Dependency Review` blocks new high/critical-severity vulnerabilities. Scheduled/manual `Live Tests` exercise AniList/AniSource without gating merges on external availability.
+- Vercel's Git integration owns deployments (PR previews + `main` → production) — don't add a duplicate deployment workflow. `main` should require `CI`, `Dependency Review`, and the Vercel check before merge.
 
-* incorrect assumptions
-* missing edge cases
-* broken paths
-* duplicated logic
-* race conditions
-* stale state
-* poor naming
-* unnecessary abstractions
-* leaked implementation details
-* performance regressions
-* accessibility regressions
-* visual inconsistencies
-* unnecessary dependencies
-* accidental debug code
-* security issues
-* behavior that only works on the happy path
+`--no-verify` is for genuine false positives or external blockers only — never to push known-broken code.
 
-Fix issues you discover before proceeding.
-
-Do not knowingly submit "good enough for now" code when the defect can reasonably be fixed in the current task.
+Before committing: review `git diff`, drop unrelated changes and temp/debug files, confirm no secrets. Keep commits focused; no meaningless checkpoint commits.
 
 ---
 
-# Git Discipline
+## Definition of Done
 
-Use a branch-and-pull-request workflow by default.
-
-Do not commit or push directly to `main` unless explicitly instructed.
-
-## Automated Quality Gates
-
-Local Git hooks provide early feedback:
-
-- **Pre-commit**: Checks formatting, lint, and types without modifying staged files
-- **Pre-push**: Runs the complete deterministic test suite and production build
-
-The hooks are configured automatically via `npm install` (postinstall script). If needed, manually run:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-GitHub Actions is the authoritative pull-request quality gate. The `CI` workflow checks formatting, lint, Astro/TypeScript types, the deterministic test suite, and the production build. The separate `Dependency Review` workflow blocks newly introduced high- or critical-severity dependency vulnerabilities. Scheduled and manually dispatched `Live Tests` exercise AniList and AniSource without making external availability a merge gate.
-
-Vercel Git integration owns deployments: it creates pull-request previews and deploys `main` to production. Do not add a duplicate deployment workflow. Protect `main` by requiring all `CI` jobs, `Dependency Review`, and the Vercel deployment check before merge; failed checks must prevent production deployment through the merge gate.
-
-Hooks can be bypassed with `--no-verify` in emergencies, but only when the failure is a false positive or external blocker—never to push known-broken code. See `.github/README.md` for workflow operation and repository-setting recommendations.
-
-## Before Committing
-
-1. Review `git diff`.
-2. Remove unrelated changes.
-3. Remove temporary/debug files.
-4. Ensure secrets and credentials are not present.
-5. The pre-commit hook will format, lint, and type-check automatically.
-
-Keep commits focused and understandable.
-
-Do not create meaningless checkpoint commits merely to save progress.
-
----
-
-# Absolute Pre-Push Quality Gate
-
-Do not commit or push any implementation that is known, suspected, or reasonably likely to be incomplete or broken.
-
-Before any push, all of the following must be true:
-
-* the complete `src/tests/` suite passes
-* every other applicable automated test passes
-* lint passes
-* type checking passes
-* the production build passes
-* no test has been skipped, disabled, weakened, or rewritten merely to make the suite green
-* no runtime error discovered during implementation remains unresolved
-* no required behavior is stubbed, mocked, hardcoded, or simulated in production code
-* no known regression remains
-* all changed external API contracts have been validated against real documented/observed responses where practical
-* the implementation has been self-reviewed against the original task, not only against the tests
-
-If any of these conditions fail, do not push.
-
-A green test suite is necessary but not sufficient. Tests can be incomplete. Before pushing, explicitly verify that the implementation actually satisfies the requested behavior and that the tests meaningfully exercise the critical success and failure paths.
-
-Never change a test merely because the implementation fails it unless the test itself is demonstrably incorrect.
-
-Never reduce validation, remove assertions, broaden mocks, weaken types, suppress errors, or add fallbacks solely to achieve a passing CI result.
-
-If a real external dependency prevents full verification, stop short of claiming completion and clearly identify the unverified boundary.
-
-# Push and CI Gate
-
-Do **not push code merely because local implementation appears complete**.
-
-Before pushing:
-
-* formatting passes
-* lint passes
-* type checking passes
-* the complete applicable test suite passes, including all relevant tests under `src/tests/`
-* production build passes
-* complete automated test suite pass where the project provides them
-* affected application flows have been tested
-* no known runtime errors remain
-* no known broken UI remains
-* no unresolved required TODOs remain
-
-After pushing, verify CI/CD.
-
-If CI fails:
-
-1. inspect the real failure
-2. fix the root cause locally
-3. rerun relevant checks
-4. push the correction
-
-Do not merge while required CI checks are failing.
-
-Merge to `main` only after required CI/CD succeeds unless explicitly instructed otherwise.
-
----
-
-# Definition of Done
-
-A task is complete only when:
-
-* the requested behavior is fully implemented
-* the implementation is technically sound
-* the real application behavior has been verified
-* relevant edge cases are handled
-* tests meaningfully cover important logic
-* lint/typecheck/production build/full applicable test suite pass
-* all relevant `src/tests/` tests pass
-* no known regression remains
-* no required functionality is stubbed or faked
-* UI changes have been visually reviewed
-* performance implications have been considered
-* the resulting code is maintainable
-* CI passes before merge
-
-"Compiles", "looks right", and "should work" are not acceptable completion criteria.
-
-Prefer evidence over assumption.
-
-# Engineering Efficiency
-
-High quality does not mean maximum process for every task.
-
-Use engineering judgment to choose the **smallest amount of investigation, implementation, and verification that gives strong confidence in correctness**.
-
-Do not turn simple or isolated tasks into repository-wide audits.
-
-Before working, classify the change by scope and risk:
-
-### Small / Low-Risk
-
-Examples:
-
-* documentation
-* comments
-* isolated configuration
-* CI YAML
-* formatting
-* copy/text
-* simple styles
-* narrowly scoped refactors with unchanged behavior
-
-For these:
-
-* inspect only directly relevant files and dependencies
-* make the smallest correct change
-* run focused validation appropriate to the change
-* do not run unrelated tests
-* do not perform broad architecture reviews
-* do not research unrelated framework behavior
-* do not add tests merely for process compliance when existing validation already proves the change
-
-### Medium-Risk
-
-Examples:
-
-* normal feature work
-* component behavior
-* API client changes
-* routing changes
-* shared utilities
-
-For these:
-
-* inspect affected dependencies/callers
-* run focused tests plus directly relevant integration/regression tests
-* run type/lint/build checks when the change can affect them
-* expand verification only if failures or uncertainty justify it
-
-### High-Risk / Cross-Cutting
-
-Examples:
-
-* authentication
-* playback/media
-* deployment architecture
-* caching/concurrency
-* security-sensitive code
-* large refactors
-* shared data models
-* production-critical infrastructure
-
-For these:
-
-* perform deeper root-cause and architecture analysis
-* test success/failure/edge/race paths where relevant
-* run broad regression coverage
-* run the complete applicable test suite and production build before push
-
-# Progressive Verification
-
-Verification must be **progressive**, not maximal by default.
-
-Start with the fastest, most targeted check capable of detecting errors in the change.
-
-If it passes and the change is well-isolated, stop escalating unless another quality gate is required before push.
-
-If it fails, affects shared behavior, or reveals uncertainty, progressively widen verification.
-
-Preferred order:
-
-1. syntax/schema/static validation specific to the changed file
-2. directly affected tests
-3. affected integration tests
-4. lint/typecheck/build as applicable
-5. broader regression tests
-6. complete test suite only when justified by risk, cross-cutting impact, or the final pre-push gate
-
-Do not repeatedly run expensive checks after every small edit.
-
-Batch related edits, then validate once at the appropriate boundary.
-
-# Time and Complexity Discipline
-
-Avoid spending disproportionate effort on straightforward work.
-
-Do not:
-
-* over-plan simple changes
-* repeatedly reread unchanged files
-* research facts already established by the repository
-* create abstractions for one-off problems
-* introduce new infrastructure when existing tooling is sufficient
-* add exhaustive tests for trivial declarative configuration
-* rerun the entire test suite when a narrowly scoped validator is sufficient during development
-* expand task scope merely because additional improvements are possible
-
-For configuration such as GitHub Actions, first inspect the relevant package scripts and existing workflows, implement the minimal correct configuration, validate the YAML and referenced commands, and stop unless evidence shows deeper repository changes are required.
-
-Correctness remains mandatory. **Unnecessary work is not quality.**
-
-# Final Pre-Push Gate
-
-Development-time verification should be proportional.
-
-Immediately before pushing a substantial implementation, perform the broader repository quality gate required by this project.
-
-For genuinely small, isolated changes, run only the checks capable of being affected by that change plus any mandatory repository hook/CI requirements.
-
-Do not duplicate work already guaranteed by an immediately subsequent authoritative CI gate unless local execution is necessary to avoid reasonably foreseeable CI failure.
+A task is done when the requested behavior is fully implemented and verified at the level its risk tier requires, edge cases relevant to that tier are handled, no known regression or required-but-stubbed functionality remains, UI changes have been visually reviewed, and lint/typecheck/build/tests appropriate to the change all pass. "Compiles," "looks right," and "should work" are not completion criteria — but neither is running every check in this document against a one-line copy fix.
