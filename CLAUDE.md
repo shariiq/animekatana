@@ -515,3 +515,125 @@ A task is complete only when:
 "Compiles", "looks right", and "should work" are not acceptable completion criteria.
 
 Prefer evidence over assumption.
+
+# Engineering Efficiency
+
+High quality does not mean maximum process for every task.
+
+Use engineering judgment to choose the **smallest amount of investigation, implementation, and verification that gives strong confidence in correctness**.
+
+Do not turn simple or isolated tasks into repository-wide audits.
+
+Before working, classify the change by scope and risk:
+
+### Small / Low-Risk
+
+Examples:
+
+* documentation
+* comments
+* isolated configuration
+* CI YAML
+* formatting
+* copy/text
+* simple styles
+* narrowly scoped refactors with unchanged behavior
+
+For these:
+
+* inspect only directly relevant files and dependencies
+* make the smallest correct change
+* run focused validation appropriate to the change
+* do not run unrelated tests
+* do not perform broad architecture reviews
+* do not research unrelated framework behavior
+* do not add tests merely for process compliance when existing validation already proves the change
+
+### Medium-Risk
+
+Examples:
+
+* normal feature work
+* component behavior
+* API client changes
+* routing changes
+* shared utilities
+
+For these:
+
+* inspect affected dependencies/callers
+* run focused tests plus directly relevant integration/regression tests
+* run type/lint/build checks when the change can affect them
+* expand verification only if failures or uncertainty justify it
+
+### High-Risk / Cross-Cutting
+
+Examples:
+
+* authentication
+* playback/media
+* deployment architecture
+* caching/concurrency
+* security-sensitive code
+* large refactors
+* shared data models
+* production-critical infrastructure
+
+For these:
+
+* perform deeper root-cause and architecture analysis
+* test success/failure/edge/race paths where relevant
+* run broad regression coverage
+* run the complete applicable test suite and production build before push
+
+# Progressive Verification
+
+Verification must be **progressive**, not maximal by default.
+
+Start with the fastest, most targeted check capable of detecting errors in the change.
+
+If it passes and the change is well-isolated, stop escalating unless another quality gate is required before push.
+
+If it fails, affects shared behavior, or reveals uncertainty, progressively widen verification.
+
+Preferred order:
+
+1. syntax/schema/static validation specific to the changed file
+2. directly affected tests
+3. affected integration tests
+4. lint/typecheck/build as applicable
+5. broader regression tests
+6. complete test suite only when justified by risk, cross-cutting impact, or the final pre-push gate
+
+Do not repeatedly run expensive checks after every small edit.
+
+Batch related edits, then validate once at the appropriate boundary.
+
+# Time and Complexity Discipline
+
+Avoid spending disproportionate effort on straightforward work.
+
+Do not:
+
+* over-plan simple changes
+* repeatedly reread unchanged files
+* research facts already established by the repository
+* create abstractions for one-off problems
+* introduce new infrastructure when existing tooling is sufficient
+* add exhaustive tests for trivial declarative configuration
+* rerun the entire test suite when a narrowly scoped validator is sufficient during development
+* expand task scope merely because additional improvements are possible
+
+For configuration such as GitHub Actions, first inspect the relevant package scripts and existing workflows, implement the minimal correct configuration, validate the YAML and referenced commands, and stop unless evidence shows deeper repository changes are required.
+
+Correctness remains mandatory. **Unnecessary work is not quality.**
+
+# Final Pre-Push Gate
+
+Development-time verification should be proportional.
+
+Immediately before pushing a substantial implementation, perform the broader repository quality gate required by this project.
+
+For genuinely small, isolated changes, run only the checks capable of being affected by that change plus any mandatory repository hook/CI requirements.
+
+Do not duplicate work already guaranteed by an immediately subsequent authoritative CI gate unless local execution is necessary to avoid reasonably foreseeable CI failure.

@@ -1,94 +1,26 @@
 ---
-import '../styles/globals.css';
-
+import "../styles/globals.css";
 interface Props {
-  title?: string;
-  description?: string;
-  image?: string;
-  canonicalUrl?: string;
+	title?: string;
+	description?: string;
+	image?: string;
+	canonicalUrl?: string;
 }
-
 const {
-  title = 'AnimeKatana — Discover Your Next Story',
-  description = 'A warm, editorial anime discovery and watch destination powered by AniList.',
-  image = '/og-image.jpg',
-  canonicalUrl = Astro.url.href,
+	title = "AnimeKatana — Discover Your Next Story",
+	description = "A warm, editorial anime discovery and watch destination powered by AniList.",
+	image = "/og-image.jpg",
+	canonicalUrl = Astro.url.href,
 } = Astro.props;
+const nav = [
+	{ href: "/browse", label: "Browse" },
+	{ href: "/schedule", label: "Schedule" },
+	{ href: "/rankings", label: "Rankings" },
+];
 ---
-
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="canonical" href={canonicalUrl} />
-    <meta name="description" content={description} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:image" content={image} />
-    <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={image} />
-    <title>{title}</title>
-  </head>
-  <body class="min-h-screen bg-parchment-50 text-gray-900">
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:px-4 focus:py-2">
-      Skip to main content
-    </a>
-
-    <header class="sticky top-0 z-40 border-b border-parchment-200 bg-parchment-50/95 backdrop-blur-sm">
-      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <a href="/" class="font-serif text-2xl font-bold text-evergreen-900 hover:text-terracotta-700 transition-colors">
-          AnimeKatana
-        </a>
-
-        <nav aria-label="Primary navigation" class="hidden items-center gap-6 md:flex">
-          <a href="/browse" class="nav-link">Browse</a>
-          <a href="/rankings" class="nav-link">Rankings</a>
-          <a href="/about" class="nav-link">About</a>
-        </nav>
-
-        <div class="flex items-center gap-3">
-          <a href="/search" class="btn-secondary">
-            Search
-          </a>
-        </div>
-      </div>
-    </header>
-
-    <main id="main-content">
-      <slot />
-    </main>
-
-    <footer class="mt-20 border-t border-parchment-200 bg-parchment-100">
-      <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div class="grid gap-8 md:grid-cols-3">
-          <div class="space-y-3">
-            <h2 class="font-serif text-xl font-bold text-evergreen-900">AnimeKatana</h2>
-            <p class="text-sm text-gray-600 leading-relaxed">A crafted anime destination, powered by AniList. We bring a curated editorial lens to the vast world of Japanese animation.</p>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-900 text-sm uppercase tracking-wider mb-4">Explore</h3>
-            <ul class="space-y-2 text-sm text-gray-600">
-              <li><a href="/browse" class="hover:text-evergreen-700 transition-colors">Browse Anime</a></li>
-              <li><a href="/rankings" class="hover:text-evergreen-700 transition-colors">Top Rated</a></li>
-              <li><a href="/about" class="hover:text-evergreen-700 transition-colors">Our Vision</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 class="font-semibold text-gray-900 text-sm uppercase tracking-wider mb-4">About</h3>
-            <p class="text-sm text-gray-600 leading-relaxed">Catalogue data provided by AniList. Playback enabled through AniSource.</p>
-          </div>
-        </div>
-        <div class="mt-10 border-t border-parchment-200 pt-6 text-center text-xs text-gray-500">
-          © {new Date().getFullYear()} AnimeKatana. This site does not host video content.
-        </div>
-      </div>
-    </footer>
-  </body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width" /><meta name="generator" content={Astro.generator} /><link rel="icon" type="image/svg+xml" href="/favicon.svg" /><link rel="canonical" href={canonicalUrl} /><meta name="description" content={description} /><meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:image" content={image} /><meta property="og:url" content={canonicalUrl} /><meta property="og:type" content="website" /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content={title} /><meta name="twitter:description" content={description} /><meta name="twitter:image" content={image} /><title>{title}</title></head>
+<body><a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-3 focus:font-bold">Skip to content</a>
+<header class="sticky top-0 z-40 border-b border-parchment-200 bg-parchment-50/95 backdrop-blur"><div class="page-shell flex min-h-16 items-center justify-between gap-4"><a href="/" class="font-serif text-xl font-bold tracking-tight text-evergreen-950 hover:text-terracotta-700 sm:text-2xl">AnimeKatana</a><nav aria-label="Primary navigation" class="hidden items-center gap-1 md:flex">{nav.map((item) => <a href={item.href} class="rounded-md px-3 py-2.5 text-sm font-bold text-parchment-700 hover:bg-parchment-100 hover:text-evergreen-900">{item.label}</a>)}</nav><a href="/search" class="button-secondary shrink-0 !min-h-10 !px-3 sm:!px-4">Search<span class="sr-only"> anime</span></a></div><nav aria-label="Mobile navigation" class="border-t border-parchment-200 md:hidden"><div class="page-shell grid grid-cols-4">{nav.map((item) => <a href={item.href} class="flex min-h-11 items-center justify-center border-r border-parchment-200 text-center text-xs font-bold text-parchment-700 last:border-r-0 hover:bg-parchment-100 hover:text-evergreen-900">{item.label}</a>)}</div></nav></header>
+<main id="main-content"><slot /></main>
+<footer class="mt-16 border-t border-parchment-200 bg-parchment-100"><div class="page-shell py-10"><div class="grid gap-8 sm:grid-cols-[1.3fr_1fr_1fr]"><div><h2 class="font-serif text-xl font-bold text-evergreen-950">AnimeKatana</h2><p class="mt-3 max-w-sm text-sm leading-relaxed text-parchment-700">A quiet, considered place to discover anime and decide what to watch next.</p></div><div><h3 class="text-sm font-bold uppercase tracking-wider text-evergreen-900">Explore</h3><ul class="mt-3 space-y-2 text-sm">{nav.map((item) => <li><a class="ink-link" href={item.href}>{item.label}</a></li>)}</ul></div><div><h3 class="text-sm font-bold uppercase tracking-wider text-evergreen-900">About</h3><p class="mt-3 text-sm leading-relaxed text-parchment-700">Catalogue data from AniList. Playback is requested only when you choose to watch.</p><a class="ink-link mt-3 inline-block" href="/about">How it works</a></div></div><p class="mt-10 border-t border-parchment-200 pt-5 text-xs text-parchment-600">© {new Date().getFullYear()} AnimeKatana. This site does not host video content.</p></div></footer>
+</body></html>

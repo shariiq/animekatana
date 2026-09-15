@@ -1,64 +1,30 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { getSchedule } from '../lib/anilist/client';
-
+import Layout from "../layouts/Layout.astro";
+import { getSchedule } from "../lib/anilist/client";
 const now = new Date();
 const from = Math.floor(now.getTime() / 1000);
-const to = Math.floor(new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).getTime() / 1000);
-const page = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10) || 1);
-
-type ScheduleItem = { airingAt: number; episode: number; media: import('../lib/types').Anime };
-let data: { pageInfo: { hasNextPage: boolean }; items: ScheduleItem[] } | null = null;
+const to = Math.floor(
+	new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7).getTime() /
+		1000,
+);
+const page = parseInt(Astro.url.searchParams.get("page") ?? "1");
+type ScheduleItem = {
+	airingAt: number;
+	episode: number;
+	media: import("../lib/types").Anime;
+};
+let data: { pageInfo: { hasNextPage: boolean }; items: ScheduleItem[] } | null =
+	null;
 let error: string | null = null;
 try {
-  data = await getSchedule(from, to, page);
+	data = await getSchedule(from, to, page);
 } catch (cause) {
-  error = cause instanceof Error ? cause.message : 'The schedule could not be loaded.';
+	error =
+		cause instanceof Error
+			? cause.message
+			: "The schedule could not be loaded.";
 }
-
-const scheduleGroups = new Map<string, ScheduleItem[]>();
-for (const item of data?.items ?? []) {
-  const day = new Date(item.airingAt * 1000).toDateString();
-  scheduleGroups.set(day, [...(scheduleGroups.get(day) ?? []), item]);
-}
-const groups = [...scheduleGroups.values()].map((items) => ({
-  dateStr: new Date(items[0].airingAt * 1000).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
-  items: items.sort((a, b) => a.airingAt - b.airingAt),
-}));
+const titleOf = (anime: ScheduleItem["media"]) =>
+	anime.title.english || anime.title.romaji || anime.title.native;
 ---
-
-<Layout title="Airing Schedule — AnimeKatana">
-  <section class="page-hero">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <p class="eyebrow">Next 7 days</p>
-      <h1 class="page-hero-title mt-2">Airing Schedule</h1>
-      <p class="page-hero-description">Keep pace with the shows that drop episodes on their own schedule — not yours.</p>
-    </div>
-  </section>
-
-  <div class="page-shell">
-    {error ? <div class="state-error" role="alert"><h2 class="heading-4 text-terracotta-900">Schedule unavailable.</h2><p class="mt-2">{error}</p></div>
-      : groups.length > 0 ? <div class="space-y-12">
-        {groups.map((group) => <div>
-          <h2 class="heading-3 border-b border-parchment-200 pb-3">{group.dateStr}</h2>
-          <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {group.items.map((item: ScheduleItem) => <div class="surface-card group flex gap-4 p-4">
-              <img src={item.media.coverImage.large} loading="lazy" decoding="async" width="48" height="80" class="h-20 w-12 shrink-0 rounded object-cover" alt="" />
-              <div class="min-w-0">
-                <p class="eyebrow">{new Date(item.airingAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · Episode {item.episode}</p>
-                <a href={`/anime/${item.media.id}/${item.media.slug}`} class="anime-card-title mt-1 block">{item.media.title.english || item.media.title.romaji}</a>
-                <a href={`/anime/${item.media.id}/${item.media.slug}/watch/${item.episode}`} class="btn-primary mt-3 py-1.5 px-3 text-sm">Watch now</a>
-              </div>
-            </div>)}
-          </div>
-        </div>)}
-      </div>
-      : <div class="state-empty"><h2 class="heading-3">Nothing airing this week.</h2><p class="body-sm mt-2">Check back soon.</p></div>}
-
-    {data?.pageInfo.hasNextPage && <nav class="pagination" aria-label="Schedule pages">
-      <a href={`?page=${page - 1}`} class:list={['pagination-link', page === 1 && 'pagination-link-disabled']} aria-disabled={page === 1 ? 'true' : undefined}>Previous</a>
-      <span class="px-2 text-sm font-semibold text-gray-600">Page {page}</span>
-      <a href={`?page=${page + 1}`} class="pagination-link">Next</a>
-    </nav>}
-  </div>
-</Layout>
+<Layout title="Airing Schedule — AnimeKatana"><section class="page-band"><div class="page-shell"><p class="eyebrow">The next seven days</p><h1 class="display-title mt-2 text-4xl sm:text-5xl">Airing schedule</h1><p class="mt-4 max-w-2xl text-lg text-parchment-700">A simple agenda for the next episodes coming your way.</p></div></section><div class="page-shell py-10">{error ? <div class="rounded-lg border border-terracotta-200 bg-terracotta-50 p-6 text-terracotta-800">{error}</div> : data && data.items.length > 0 ? <div class="space-y-10">{Array.from(new Set(data.items.map((item) => item.airingAt))).sort((a, b) => a - b).map((airingAt) => { const date = new Date(airingAt * 1000); const dateStr = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); const dailyAnime = data!.items.filter((item) => item.airingAt === airingAt); return <section><header class="mb-4 flex items-baseline gap-4 border-b border-parchment-200 pb-3"><h2 class="display-title text-2xl">{dateStr}</h2><span class="text-sm text-parchment-600">{dailyAnime.length} airing</span></header><div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{dailyAnime.map((item) => <a href={`/anime/${item.media.id}/${item.media.slug}`} class="paper-card group flex min-h-28 gap-4 p-3 hover:border-evergreen-400"><img src={item.media.coverImage.large} width="80" height="112" alt="" class="aspect-[5/7] w-14 rounded object-cover" /><div class="min-w-0 py-1"><p class="eyebrow">Episode {item.episode}</p><h3 class="mt-2 line-clamp-2 font-serif font-bold text-evergreen-950 group-hover:text-terracotta-700">{titleOf(item.media)}</h3><p class="mt-1 text-xs text-parchment-600">{new Date(item.airingAt * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</p></div></a>)}</div></section>; })}</div> : <div class="quiet-empty py-20">No anime are airing in the selected period.</div>}{data?.pageInfo.hasNextPage && <div class="mt-10 flex justify-center gap-3"><a href={`?page=${page - 1}`} class={`button-secondary ${page === 1 ? 'pointer-events-none opacity-40' : ''}`}>Previous</a><a href={`?page=${page + 1}`} class="button-secondary">Next page</a></div>}</div></Layout>

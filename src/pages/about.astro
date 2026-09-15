@@ -1,70 +1,26 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { currentSeason } from '../lib/season';
-
-const now = currentSeason();
+import Layout from "../layouts/Layout.astro";
+const links = [
+	{
+		href: "/browse",
+		title: "Browse",
+		description: "Find a title by format, status, and season.",
+	},
+	{
+		href: "/season",
+		title: "Seasonal",
+		description: "See what is airing right now.",
+	},
+	{
+		href: "/schedule",
+		title: "Schedule",
+		description: "Keep pace with the coming week.",
+	},
+	{
+		href: "/rankings",
+		title: "Rankings",
+		description: "Start with the titles audiences love.",
+	},
+];
 ---
-
-<Layout title="About — AnimeKatana">
-  <section class="border-b border-parchment-200 bg-parchment-100 py-16 sm:py-20">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <h1 class="font-serif text-5xl font-bold text-evergreen-950 sm:text-6xl">About AnimeKatana</h1>
-    </div>
-  </section>
-
-  <div class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-    <div class="space-y-10">
-      <section class="space-y-4">
-        <h2 class="font-serif text-2xl font-bold text-evergreen-900">What is AnimeKatana?</h2>
-        <p class="text-lg leading-relaxed text-gray-700">AnimeKatana is a warm, editorial anime destination built around a simple idea: make discovery feel like reading a well-curated magazine, not browsing a generic dashboard. Every title gets a proper guide, not just a card with a play button.</p>
-        <p class="text-lg leading-relaxed text-gray-700">Catalogue data comes from AniList — the most comprehensive publicly available anime database — giving you accurate information about seasons, studios, staff, characters, and more. Playback is provided by AniSource only when you decide to start watching, so no unnecessary requests are made until you explicitly ask for them.</p>
-      </section>
-
-      <section class="space-y-4">
-        <h2 class="font-serif text-2xl font-bold text-evergreen-900">Design Philosophy</h2>
-        <p class="text-lg leading-relaxed text-gray-700">We deliberately avoided the glassmorphism trends, giant gradients, and dark neon aesthetics that flood the streaming space. Instead, we drew inspiration from print editorial design: parchment tones, ink-like text, muted accents, and a type scale that rewards attention rather than demanding it.</p>
-        <p class="text-lg leading-relaxed text-gray-700">The result should feel like a well-made printed catalogue — quiet, considered, and easy to spend time in.</p>
-      </section>
-
-      <section class="space-y-4">
-        <h2 class="font-serif text-2xl font-bold text-evergreen-900">Technical Architecture</h2>
-        <p class="text-lg leading-relaxed text-gray-700">AnimeKatana is built on <strong>Astro 5</strong> with <strong>Qwik</strong> for interactive islands only. The server handles all catalogue rendering for speed and SEO; the browser only loads JavaScript where it is actually needed.</p>
-        <ul class="space-y-2 text-lg text-gray-700">
-          <li>• <strong>AniList GraphQL</strong> for catalogue, discovery, and metadata</li>
-          <li>• <strong>AniSource API</strong> for playback, contacted only on demand</li>
-          <li>• <strong>Tailwind CSS</strong> with a custom warm editorial design system</li>
-          <li>• <strong>HLS.js</strong> dynamically imported only on watch pages, only when needed</li>
-          <li>• Aggressive caching with single-flight request deduplication</li>
-        </ul>
-      </section>
-
-      <section class="space-y-4">
-        <h2 class="font-serif text-2xl font-bold text-evergreen-900">Data Sources</h2>
-        <p class="text-lg leading-relaxed text-gray-700"><strong>AniList</strong> provides the complete catalogue: titles, descriptions, airing dates, studios, staff, characters, relations, recommendations, trailers, statistics, and rankings. This data is cached aggressively to minimize API calls.</p>
-        <p class="text-lg leading-relaxed text-gray-700"><strong>AniSource</strong> provides playback streams. It is never used for catalogue or discovery data. Title matching uses a staged algorithm that prioritizes confidence and refuses ambiguous automatic selection.</p>
-      </section>
-
-      <section class="rounded-xl border border-parchment-200 bg-white p-8 shadow-sm">
-        <h2 class="font-serif text-2xl font-bold text-evergreen-900">Explore AnimeKatana</h2>
-        <div class="mt-6 grid gap-4 sm:grid-cols-2">
-          <a href="/browse" class="flex items-center gap-3 rounded-lg border border-parchment-200 p-4 hover:border-evergreen-500 hover:bg-evergreen-50 transition">
-            <span class="text-2xl">🔍</span>
-            <div><div class="font-semibold text-evergreen-950">Browse</div><div class="text-sm text-gray-600">Filter by genre, format, status, season, and more</div></div>
-          </a>
-          <a href={`/season/${now.year}/${now.season.toLowerCase()}`} class="flex items-center gap-3 rounded-lg border border-parchment-200 p-4 hover:border-evergreen-500 hover:bg-evergreen-50 transition-colors">
-            <span class="text-2xl">📅</span>
-            <div><div class="font-semibold text-evergreen-950">Seasonal</div><div class="text-sm text-gray-600">What's airing right now</div></div>
-          </a>
-          <a href="/schedule" class="flex items-center gap-3 rounded-lg border border-parchment-200 p-4 hover:border-evergreen-500 hover:bg-evergreen-50 transition-colors">
-            <span class="text-2xl">⏰</span>
-            <div><div class="font-semibold text-evergreen-950">Schedule</div><div class="text-sm text-gray-600">7-day airing agenda</div></div>
-          </a>
-          <a href="/rankings" class="flex items-center gap-3 rounded-lg border border-parchment-200 p-4 hover:border-evergreen-500 hover:bg-evergreen-50 transition">
-            <span class="text-2xl">🏆</span>
-            <div><div class="font-semibold text-evergreen-950">Rankings</div><div class="text-sm text-gray-600">Most popular, highest rated, most favourited</div></div>
-          </a>
-        </div>
-      </section>
-    </div>
-  </div>
-</Layout>
+<Layout title="About — AnimeKatana"><section class="page-band"><div class="page-shell"><p class="eyebrow">Our approach</p><h1 class="display-title mt-2 text-5xl sm:text-6xl">About AnimeKatana</h1><p class="mt-5 max-w-2xl text-lg leading-relaxed text-parchment-700">A quieter place to discover anime: more guide than feed, more context than noise.</p></div></section><article class="page-shell max-w-3xl py-12 sm:py-16"><div class="space-y-10 text-lg leading-8 text-parchment-700"><section><h2 class="display-title text-2xl">What this is</h2><p class="mt-4">AnimeKatana is an editorial anime destination built around a simple idea: discovery should feel like reading a well-curated magazine, not scrolling a generic dashboard. Every title has a proper guide, not just a card with a play button.</p><p class="mt-4">Catalogue data comes from AniList, giving each guide context around seasons, studios, staff, characters, and more. Playback is requested from AniSource only when you choose to watch.</p></section><section><h2 class="display-title text-2xl">Designed to settle in</h2><p class="mt-4">The interface borrows from print: warm paper, clear ink, muted accents, and type that rewards attention. It stays compact and practical on small screens without filling the page with visual noise.</p></section><section><h2 class="display-title text-2xl">How it is built</h2><p class="mt-4">Astro renders catalogue pages on the server for speed and SEO. Qwik is reserved for interaction where it matters, including search and playback. HLS playback code loads only when a selected stream needs it.</p></section><section class="paper-card p-6 sm:p-8"><p class="eyebrow">Start exploring</p><h2 class="display-title mt-2 text-2xl">A guide for every way in</h2><div class="mt-6 grid gap-3 sm:grid-cols-2">{links.map((link) => <a href={link.href} class="rounded-md border border-parchment-200 p-4 hover:border-evergreen-400 hover:bg-evergreen-50"><h3 class="font-serif text-lg font-bold text-evergreen-950">{link.title} <span aria-hidden="true">→</span></h3><p class="mt-1 text-sm leading-relaxed text-parchment-700">{link.description}</p></a>)}</div></section></div></article></Layout>

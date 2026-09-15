@@ -1,28 +1,37 @@
 ---
-import type { Anime } from '../../lib/types';
-import AnimeCard from './AnimeCard.astro';
+import type { Anime } from "../../lib/types";
+import AnimeCard from "./AnimeCard.astro";
 
 interface Props {
-  title: string;
-  eyebrow?: string;
-  description?: string;
-  anime: Anime[];
-  viewAllHref?: string;
-  ranked?: boolean;
+	title: string;
+	eyebrow?: string;
+	description?: string;
+	anime: Anime[];
+	viewAllHref?: string;
+	ranked?: boolean;
+	rankOffset?: number;
 }
 
-const { title, eyebrow, description, anime, viewAllHref, ranked = false } = Astro.props;
+const {
+	title,
+	eyebrow,
+	description,
+	anime,
+	viewAllHref,
+	ranked = false,
+	rankOffset = 0,
+} = Astro.props;
 ---
 
 <section class="py-12 sm:py-16">
-  <div class="section-header">
+  <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      {eyebrow && <p class="section-eyebrow">{eyebrow}</p>}
-      <h2 class="section-title">{title}</h2>
-      {description && <p class="body-sm mt-2">{description}</p>}
+      {eyebrow && <p class="mb-2 text-sm font-semibold uppercase tracking-wider text-terracotta-700">{eyebrow}</p>}
+      <h2 class="font-serif text-3xl font-bold text-evergreen-950 sm:text-4xl">{title}</h2>
+      {description && <p class="mt-2 max-w-2xl text-gray-600">{description}</p>}
     </div>
     {viewAllHref && (
-      <a href={viewAllHref} class="section-link">
+      <a href={viewAllHref} class="inline-flex items-center gap-2 text-sm font-semibold text-evergreen-700 hover:text-terracotta-700">
         View all
         <span aria-hidden="true">→</span>
       </a>
@@ -30,14 +39,14 @@ const { title, eyebrow, description, anime, viewAllHref, ranked = false } = Astr
   </div>
 
   {anime.length > 0 ? (
-    <div class="anime-grid">
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-5">
       {anime.map((item, index) => (
-        <AnimeCard anime={item} rank={ranked ? index + 1 : undefined} />
+        <AnimeCard anime={item} rank={ranked ? rankOffset + index + 1 : undefined} />
       ))}
     </div>
   ) : (
-    <div class="state-empty">
-      <p class="body-sm">No anime available right now.</p>
+    <div class="rounded-lg border-2 border-dashed border-parchment-300 bg-parchment-50 p-12 text-center">
+      <p class="text-gray-600">No anime available right now.</p>
     </div>
   )}
 </section>

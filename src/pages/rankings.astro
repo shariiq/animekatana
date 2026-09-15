@@ -1,48 +1,57 @@
 ---
-import AnimeSection from '../components/content/AnimeSection.astro';
-import Layout from '../layouts/Layout.astro';
-import { getCatalogue } from '../lib/anilist/client';
+import AnimeSection from "../components/content/AnimeSection.astro";
+import Layout from "../layouts/Layout.astro";
+import { getCatalogue } from "../lib/anilist/client";
+import { parseRankingsQuery, rankingsHref } from "../lib/catalogue-query";
 
-const { searchParams } = Astro.url;
-const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
-const type = searchParams.get('type') ?? 'POPULARITY_DESC';
-const rankingTypes = [
-  { id: 'POPULARITY_DESC', label: 'Most Popular' },
-  { id: 'SCORE_DESC', label: 'Highest Rated' },
-  { id: 'FAVOURITES_DESC', label: 'Most Favourites' },
-];
-const activeRanking = rankingTypes.find((ranking) => ranking.id === type) ?? rankingTypes[0];
-
+const query = parseRankingsQuery(Astro.url.searchParams);
 let data: Awaited<ReturnType<typeof getCatalogue>> | null = null;
 let error: string | null = null;
 try {
-  data = await getCatalogue({ page, sort: [activeRanking.id] });
+	data = await getCatalogue({ page: query.page, sort: [query.type] });
 } catch (cause) {
-  error = cause instanceof Error ? cause.message : 'The rankings could not be loaded.';
+	error =
+		cause instanceof Error
+			? cause.message
+			: "The rankings could not be loaded.";
 }
+
+const rankingTypes = [
+	{ id: "POPULARITY_DESC", label: "Most Popular" },
+	{ id: "SCORE_DESC", label: "Highest Rated" },
+	{ id: "FAVOURITES_DESC", label: "Most Favourites" },
+] as const;
 ---
 
 <Layout title="Rankings — AnimeKatana">
-  <section class="page-hero">
+  <section class="border-b border-parchment-200 bg-parchment-100 py-12 sm:py-16">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <p class="eyebrow">The community canon</p>
-      <h1 class="page-hero-title mt-2">Rankings</h1>
-      <p class="page-hero-description">A living index of the stories audiences return to, recommend, and remember.</p>
-      <nav class="mt-8 flex flex-wrap gap-2" aria-label="Ranking type">
-        {rankingTypes.map((ranking) => <a href={`?type=${ranking.id}`} aria-current={activeRanking.id === ranking.id ? 'page' : undefined} class:list={['filter-chip px-4 py-2 text-sm', activeRanking.id === ranking.id && 'border-evergreen-900 bg-evergreen-900 text-white hover:bg-evergreen-800']}>{ranking.label}</a>)}
-      </nav>
+      <h1 class="font-serif text-4xl font-bold text-evergreen-950 sm:text-5xl">Rankings</h1>
+      <p class="mt-4 max-w-2xl text-lg text-gray-700">Explore the definitive lists of the most beloved and highest-rated anime of all time.</p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        {rankingTypes.map((ranking) => (
+          <a href={rankingsHref(query, { type: ranking.id, page: 1 })} class={`rounded-full px-4 py-2 text-sm font-bold transition ${query.type === ranking.id ? 'bg-evergreen-800 text-white' : 'border border-parchment-300 bg-white text-gray-600 hover:bg-parchment-100'}`}>
+            {ranking.label}
+          </a>
+        ))}
+      </div>
     </div>
   </section>
 
-  <div class="page-shell">
-    {error ? <div class="state-error" role="alert"><h2 class="heading-4 text-terracotta-900">The list could not be assembled.</h2><p class="mt-2">{error}</p></div>
-      : data && data.items.length > 0 ? <AnimeSection title={activeRanking.label} eyebrow={`Page ${page}`} anime={data.items} ranked />
-      : <div class="state-empty"><h2 class="heading-3">No ranked titles found.</h2><p class="body-sm mt-2">Try another ranking view or return shortly.</p></div>}
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    {error ? (
+      <div class="rounded-lg border border-terracotta-200 bg-terracotta-50 p-6 text-terracotta-800">{error}</div>
+    ) : data && data.items.length > 0 ? (
+      <AnimeSection title={`Ranked by ${rankingTypes.find((ranking) => ranking.id === query.type)?.label ?? 'Popularity'}`} anime={data.items} ranked rankOffset={(query.page - 1) * 24} />
+    ) : (
+      <div class="py-24 text-center text-gray-600">No anime found for this ranking.</div>
+    )}
 
-    {data && (page > 1 || data.hasNext) && <nav class="pagination" aria-label="Ranking pages">
-      <a href={`?type=${activeRanking.id}&page=${page - 1}`} class:list={['pagination-link', page === 1 && 'pagination-link-disabled']} aria-disabled={page === 1 ? 'true' : undefined}>Previous</a>
-      <span class="px-2 text-sm font-semibold text-gray-600">Page {page}</span>
-      <a href={`?type=${activeRanking.id}&page=${page + 1}`} class:list={['pagination-link', !data.hasNext && 'pagination-link-disabled']} aria-disabled={!data.hasNext ? 'true' : undefined}>Next</a>
-    </nav>}
+    {data?.hasNext && (
+      <div class="mt-12 flex justify-center gap-4">
+        <a href={rankingsHref(query, { page: Math.max(1, query.page - 1) })} class={`rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium ${query.page === 1 ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'}`}>Previous</a>
+        <a href={rankingsHref(query, { page: query.page + 1 })} class="rounded-md border border-gray-300 bg-white px-6 py-2 text-sm font-medium hover:bg-gray-50">Next Page</a>
+      </div>
+    )}
   </div>
 </Layout>
