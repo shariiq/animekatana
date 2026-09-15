@@ -1,81 +1,99 @@
 ---
-import AnimeSection from '../components/content/AnimeSection.astro';
-import Layout from '../layouts/Layout.astro';
-import { getCatalogue } from '../lib/anilist/client';
+import AnimeSection from "../components/content/AnimeSection.astro";
+import Layout from "../layouts/Layout.astro";
+import { getCatalogue } from "../lib/anilist/client";
+import {
+	catalogueFormats,
+	catalogueGenres,
+	catalogueHref,
+	catalogueSorts,
+	catalogueStatuses,
+	parseCatalogueQuery,
+} from "../lib/catalogue-query";
+import { humanSeason, seasons } from "../lib/season";
 
-const { searchParams } = Astro.url;
-const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
-const genre = searchParams.get('genre') || null;
-const format = searchParams.get('format') || null;
-const status = searchParams.get('status') || null;
-const season = searchParams.get('season') || null;
-const year = searchParams.get('year') ? parseInt(searchParams.get('year')!, 10) : null;
-const sort = searchParams.get('sort')?.split(',') || ['POPULARITY_DESC'];
-
-const browseHref = (changes: Record<string, string | number | null>) => {
-  const params = new URLSearchParams(searchParams);
-  for (const [key, value] of Object.entries(changes)) {
-    if (value === null || value === '') params.delete(key);
-    else params.set(key, String(value));
-  }
-  return `/browse${params.size ? `?${params}` : ''}`;
-};
-
+const query = parseCatalogueQuery(Astro.url.searchParams);
 let data: Awaited<ReturnType<typeof getCatalogue>> | null = null;
 let error: string | null = null;
 try {
-  data = await getCatalogue({ page, genre: genre || undefined, format: format || undefined, status: status || undefined, season: season || undefined, year: year || undefined, sort });
+	data = await getCatalogue({ ...query, sort: [query.sort] });
 } catch (cause) {
-  error = cause instanceof Error ? cause.message : 'The catalogue service is temporarily unavailable.';
+	error =
+		cause instanceof Error
+			? cause.message
+			: "The catalogue service is temporarily unavailable.";
 }
 
+const labels: Record<string, string> = {
+	FINISHED: "Finished",
+	RELEASING: "Currently Airing",
+	NOT_YET_RELEASED: "Not Yet Released",
+	POPULARITY_DESC: "Most Popular",
+	SCORE_DESC: "Highest Rated",
+	FAVOURITES_DESC: "Most Favourites",
+	TRENDING_DESC: "Trending",
+	START_DATE_DESC: "Newest",
+	TITLE_ROMAJI_ASC: "Title A–Z",
+};
 const activeFilters = [
-  { label: 'Genre', value: genre, href: browseHref({ genre: null, page: 1 }) },
-  { label: 'Format', value: format, href: browseHref({ format: null, page: 1 }) },
-  { label: 'Status', value: status, href: browseHref({ status: null, page: 1 }) },
-].filter((filter) => filter.value);
+	["Genre", query.genre, { genre: undefined }],
+	["Format", query.format, { format: undefined }],
+	["Status", query.status, { status: undefined }],
+	[
+		"Season",
+		query.season ? humanSeason(query.season) : undefined,
+		{ season: undefined },
+	],
+	["Year", query.year, { year: undefined }],
+	[
+		"Sort",
+		query.sort === "POPULARITY_DESC" ? undefined : labels[query.sort],
+		{ sort: "POPULARITY_DESC" as const },
+	],
+] as const;
 ---
 
 <Layout title="Browse Anime — AnimeKatana">
-  <section class="page-hero">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <p class="eyebrow">The complete catalogue</p>
-      <h1 class="page-hero-title mt-2">Find something remarkable</h1>
-      <p class="page-hero-description">Move through seasons, formats, and genres without losing the thread of what makes each story worth your time.</p>
-      {activeFilters.length > 0 && <div class="mt-7 flex flex-wrap gap-2" aria-label="Active filters">
-        {activeFilters.map((filter) => <a href={filter.href} class="filter-chip">{filter.label}: {filter.value}<span aria-hidden="true" class="text-evergreen-500">×</span></a>)}
-      </div>}
+  <section class="page-band">
+    <div class="page-shell">
+      <p class="eyebrow">The catalogue</p>
+      <h1 class="display-title mt-2 text-4xl sm:text-5xl">Browse anime</h1>
+      <p class="mt-4 max-w-2xl text-lg text-parchment-700">Refine the library by season, genre, status, or format and find something that fits the moment.</p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        {activeFilters.filter((filter) => filter[1] !== undefined).map(([label, value, changes]) => (
+          <a href={catalogueHref(query, { ...changes, page: 1 })} class="inline-flex items-center gap-2 rounded-full bg-evergreen-100 px-3 py-1 text-xs font-bold text-evergreen-800 hover:bg-evergreen-200">
+            {label}: {value}<span class="ml-1 text-evergreen-400" aria-hidden="true">×</span>
+          </a>
+        ))}
+      </div>
     </div>
   </section>
 
-  <div class="page-shell">
-    <div class="grid gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-12">
-      <aside class="surface-raised h-fit p-5 lg:sticky lg:top-24" aria-label="Catalogue filters">
-        <div>
-          <h2 class="heading-4">Format</h2>
-          <div class="mt-3 space-y-1">
-            {['TV', 'MOVIE', 'OVA', 'ONA', 'SPECIAL'].map((value) => <a href={browseHref({ format: value, page: 1 })} class:list={['filter-option', format === value && 'filter-option-active']}>{value}</a>)}
+  <div class="page-shell py-10 sm:py-12">
+    <div class="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]">
+      <aside class="paper-card h-fit space-y-8 p-5 lg:sticky lg:top-24" aria-label="Catalogue filters">
+        <div><h3 class="mb-4 font-semibold text-gray-900">Format</h3><ul class="space-y-2 text-sm text-gray-600">{catalogueFormats.map((value) => <li><a href={catalogueHref(query, { format: value, page: 1 })} class={`block py-1 ${query.format === value ? 'font-bold text-evergreen-800' : 'hover:text-evergreen-700'}`}>{value}</a></li>)}</ul></div>
+        <div><h3 class="mb-4 font-semibold text-gray-900">Status</h3><ul class="space-y-2 text-sm text-gray-600">{catalogueStatuses.map((value) => <li><a href={catalogueHref(query, { status: value, page: 1 })} class={`block py-1 ${query.status === value ? 'font-bold text-evergreen-800' : 'hover:text-evergreen-700'}`}>{labels[value]}</a></li>)}</ul></div>
+        <div><h3 class="mb-4 font-semibold text-gray-900">Season</h3><ul class="space-y-2 text-sm text-gray-600">{seasons.map((value) => <li><a href={catalogueHref(query, { season: value, page: 1 })} class={`block py-1 ${query.season === value ? 'font-bold text-evergreen-800' : 'hover:text-evergreen-700'}`}>{humanSeason(value)}</a></li>)}</ul></div>
+        <div><h3 class="mb-4 font-semibold text-gray-900">Genre</h3><ul class="space-y-2 text-sm text-gray-600">{catalogueGenres.map((value) => <li><a href={catalogueHref(query, { genre: value, page: 1 })} class={`block py-1 ${query.genre === value ? 'font-bold text-evergreen-800' : 'hover:text-evergreen-700'}`}>{value}</a></li>)}</ul></div>
+        <div><h3 class="mb-4 font-semibold text-gray-900">Sort</h3><ul class="space-y-2 text-sm text-gray-600">{catalogueSorts.map((value) => <li><a href={catalogueHref(query, { sort: value, page: 1 })} class={`block py-1 ${query.sort === value ? 'font-bold text-evergreen-800' : 'hover:text-evergreen-700'}`}>{labels[value]}</a></li>)}</ul></div>
+        <form method="get" class="space-y-2">
+          <label for="year" class="block text-sm font-semibold text-gray-900">Year</label>
+          <div class="flex gap-2">
+            <input id="year" name="year" type="number" min="1900" max="2100" value={query.year ?? ''} placeholder="e.g. 2024" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm" />
+            <button type="submit" class="rounded-md bg-evergreen-800 px-3 py-2 text-sm font-semibold text-white hover:bg-evergreen-700">Apply</button>
           </div>
-        </div>
-        <div class="mt-7 border-t border-parchment-200 pt-6">
-          <h2 class="heading-4">Status</h2>
-          <div class="mt-3 space-y-1">
-            {['FINISHED', 'RELEASING', 'NOT_YET_RELEASED'].map((value) => <a href={browseHref({ status: value, page: 1 })} class:list={['filter-option', status === value && 'filter-option-active']}>{value.replaceAll('_', ' ')}</a>)}
-          </div>
-        </div>
-        {(format || status || genre) && <a href="/browse" class="section-link mt-7">Clear all filters <span aria-hidden="true">×</span></a>}
+          {query.genre && <input type="hidden" name="genre" value={query.genre} />}
+          {query.format && <input type="hidden" name="format" value={query.format} />}
+          {query.status && <input type="hidden" name="status" value={query.status} />}
+          {query.season && <input type="hidden" name="season" value={query.season} />}
+          {query.sort !== 'POPULARITY_DESC' && <input type="hidden" name="sort" value={query.sort} />}
+        </form>
       </aside>
 
-      <main class="min-w-0">
-        {error ? <div class="state-error" role="alert"><h2 class="heading-4 text-terracotta-900">The catalogue needs a moment.</h2><p class="mt-2">{error}</p></div>
-          : data && data.items.length > 0 ? <AnimeSection title="Results" eyebrow={`${data.items.length} titles on this page`} anime={data.items} />
-          : <div class="state-empty"><h2 class="heading-3">Nothing fits those filters yet.</h2><p class="body-sm mt-2">Remove a filter or begin again with the complete catalogue.</p><a href="/browse" class="btn-primary mt-6">Reset filters</a></div>}
-
-        {data && (page > 1 || data.hasNext) && <nav class="pagination" aria-label="Catalogue pages">
-          <a href={browseHref({ page: page - 1 })} class:list={['pagination-link', page === 1 && 'pagination-link-disabled']} aria-disabled={page === 1 ? 'true' : undefined}>Previous</a>
-          <span class="px-2 text-sm font-semibold text-gray-600">Page {page}</span>
-          <a href={browseHref({ page: page + 1 })} class:list={['pagination-link', !data.hasNext && 'pagination-link-disabled']} aria-disabled={!data.hasNext ? 'true' : undefined}>Next</a>
-        </nav>}
+      <main>
+        {error ? <div class="rounded-lg border border-terracotta-200 bg-terracotta-50 p-6 text-terracotta-800" role="alert">{error}</div> : data && data.items.length > 0 ? <AnimeSection title="Results" eyebrow={`${data.items.length} titles on this page`} anime={data.items} /> : <div class="quiet-empty py-20"><h2 class="font-serif text-xl font-bold text-evergreen-950">No anime match these filters.</h2><a href="/browse" class="button-secondary mt-5">Clear filters</a></div>}
+        {data && (query.page > 1 || data.hasNext) && <nav class="mt-12 flex justify-center gap-3" aria-label="Catalogue pages"><a href={catalogueHref(query, { page: Math.max(1, query.page - 1) })} class={`button-secondary ${query.page === 1 ? 'pointer-events-none opacity-50' : ''}`} aria-disabled={query.page === 1 ? 'true' : undefined}>Previous</a><span class="flex items-center px-2 text-sm font-bold text-parchment-700">Page {query.page}</span><a href={catalogueHref(query, { page: query.page + 1 })} class={`button-secondary ${!data.hasNext ? 'pointer-events-none opacity-50' : ''}`} aria-disabled={!data.hasNext ? 'true' : undefined}>Next page</a></nav>}
       </main>
     </div>
   </div>
